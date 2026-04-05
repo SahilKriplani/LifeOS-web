@@ -27,9 +27,9 @@
   --muted: rgba(13, 148, 136, 0.08);
   --muted-foreground: #6B7280;
 
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-border: rgba(13, 148, 136, 0.15);
-  --glass-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
+  --glass-bg: rgba(240, 253, 250, 0.75);
+  --glass-border: rgba(13, 148, 136, 0.2);
+  --glass-shadow: 0 8px 32px rgba(13, 148, 136, 0.12);
 
   --sidebar-width: 240px;
   --navbar-height: 64px;
@@ -59,9 +59,9 @@
   --muted: rgba(20, 184, 166, 0.1);
   --muted-foreground: #9CA3AF;
 
-  --glass-bg: rgba(6, 15, 14, 0.6);
-  --glass-border: rgba(20, 184, 166, 0.2);
-  --glass-shadow: 0 8px 32px rgba(20, 184, 166, 0.15);
+  --glass-bg: rgba(6, 15, 14, 0.75);
+  --glass-border: rgba(20, 184, 166, 0.25);
+  --glass-shadow: 0 8px 32px rgba(20, 184, 166, 0.12);
 
   --sidebar-width: 240px;
   --navbar-height: 64px;

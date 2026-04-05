@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
+import ToasterProvider from "@/components/shared/ToasterProvider";
 import "./globals.css";
 
-// ─── Fonts ────────────────────────────────────────────────────────────────────
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,13 +14,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ─── Metadata ─────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "LifeOS",
   description: "Your personal life operating system",
 };
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
 export default function RootLayout({
   children,
 }: {
@@ -38,6 +36,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange={false}
         >
+          <ToasterProvider />
           {children}
         </ThemeProvider>
       </body>
