@@ -27,6 +27,18 @@ api.interceptors.request.use(
   },
 );
 
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Sanitize logs — never log passwords
+    if (process.env.NODE_ENV === "development") {
+      const sanitized = { ...config.data };
+      if (sanitized?.password) sanitized.password = "***";
+      if (sanitized?.confirmPassword) sanitized.confirmPassword = "***";
+    }
+    return config;
+  },
+  (error: AxiosError) => Promise.reject(error),
+);
 // ─── Response interceptor ─────────────────────────────────────────────────────
 // Runs on every response before it reaches your component
 api.interceptors.response.use(
