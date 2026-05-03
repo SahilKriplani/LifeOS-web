@@ -44,7 +44,8 @@ export default function LoginForm() {
       const res = await api.post("/auth/login", data);
       setUser(res.data.user);
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      router.refresh();
+      router.replace("/dashboard");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
       toast.error(error.response?.data?.detail || "Invalid email or password");

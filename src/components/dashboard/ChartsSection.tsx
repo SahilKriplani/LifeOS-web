@@ -13,25 +13,13 @@ import {
 } from "recharts";
 import GlassCard from "@/components/shared/GlassCard";
 import ProgressRing from "@/components/shared/ProgressRing";
+import { useDSALogs, useDSAStats } from "@/hooks/useDSA";
+import { useFitnessStats } from "@/hooks/useFitness";
+
+import { useTasks } from "@/hooks/useTasks";
+import { getTodayISO } from "@/lib/utils";
 import type { ChartView } from "@/types";
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const lineData = [
-  { date: "Apr 1", dsa: 2, fitness: 60 },
-  { date: "Apr 2", dsa: 5, fitness: 58 },
-  { date: "Apr 3", dsa: 7, fitness: 57 },
-  { date: "Apr 4", dsa: 10, fitness: 56 },
-  { date: "Apr 5", dsa: 12, fitness: 55 },
-  { date: "Apr 6", dsa: 15, fitness: 54 },
-  { date: "Apr 7", dsa: 18, fitness: 53 },
-];
-
-const ringData = [
-  { label: "DSA", value: 47, color: "#14B8A6" },
-  { label: "Fitness", value: 32, color: "#8b5cf6" },
-  { label: "Tasks", value: 80, color: "#06b6d4" },
-  { label: "Streak", value: 60, color: "#f97316" },
-];
+import { useStreak } from "@/hooks/useStreaks";
 
 // ─── Custom tooltip ───────────────────────────────────────────────────────────
 const CustomTooltip = ({
@@ -68,6 +56,52 @@ const CustomTooltip = ({
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ChartsSection() {
   const [view, setView] = useState<ChartView>("line");
+  const today = getTodayISO();
+
+  // ─── Real data ───────────────────────────────────────────────────────────
+  const { data: dsaLogs = [] } = useDSALogs();
+  const { data: dsaStats } = useDSAStats();
+  const { data: fitnessStats } = useFitnessStats();
+  const { data: streak } = useStreak();
+  const { data: tasks = [] } = useTasks(today);
+
+  // ─── Build line chart data from DSA logs ─────────────────────────────────
+  const lineData = [...dsaLogs]
+    .sort((a, b) => a.solvedAt.localeCompare(b.solvedAt))
+    .slice(-7)
+    .map((log, i) => ({
+      date: log.solvedAt.slice(5),
+      dsa: i + 1,
+    }));
+
+  // ─── Build ring data from real stats ─────────────────────────────────────
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t) => t.isDone).length;
+  const taskPercent =
+    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+  const dsaPercent = Math.min(
+    Math.round(((dsaStats?.total ?? 0) / 300) * 100),
+    100,
+  );
+  const fitnessPercent = (() => {
+    const current = Number(fitnessStats?.currentWeight ?? 139);
+    const target = 85;
+    const start = 139;
+    const lost = start - current;
+    const tolose = start - target;
+    return Math.min(Math.round((lost / tolose) * 100), 100);
+  })();
+  const streakPercent = Math.min(
+    Math.round(((streak?.currentStreak ?? 0) / 365) * 100),
+    100,
+  );
+
+  const ringData = [
+    { label: "DSA", value: dsaPercent, color: "#14B8A6" },
+    { label: "Fitness", value: fitnessPercent, color: "#8b5cf6" },
+    { label: "Tasks", value: taskPercent, color: "#06b6d4" },
+    { label: "Streak", value: streakPercent, color: "#f97316" },
+  ];
 
   return (
     <GlassCard padding="md" className="flex flex-col gap-4">
@@ -84,7 +118,7 @@ export default function ChartsSection() {
             className="text-xs mt-0.5"
             style={{ color: "var(--muted-foreground)" }}
           >
-            Last 7 days
+            {view === "line" ? "Last 7 DSA logs" : "Goal completion rings"}
           </p>
         </div>
 
@@ -125,42 +159,45 @@ export default function ChartsSection() {
             transition={{ duration: 0.3 }}
             className="h-52"
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--glass-border)"
-                />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="dsa"
-                  stroke="#14B8A6"
-                  strokeWidth={2}
-                  dot={{ fill: "#14B8A6", r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="fitness"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  dot={{ fill: "#8b5cf6", r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {lineData.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <p
+                  className="text-sm"
+                  style={{ color: "var(--muted-foreground)" }}
+                >
+                  No DSA logs yet — start solving problems
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lineData}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--glass-border)"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line
+                    type="monotone"
+                    dataKey="dsa"
+                    stroke="#14B8A6"
+                    strokeWidth={2}
+                    dot={{ fill: "#14B8A6", r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </motion.div>
         ) : (
           <motion.div

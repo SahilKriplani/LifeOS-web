@@ -58,7 +58,7 @@ export default function RegisterForm() {
       });
       setUser(res.data.user);
       toast.success("Account created! Welcome to LifeOS 🎉");
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
       toast.error(

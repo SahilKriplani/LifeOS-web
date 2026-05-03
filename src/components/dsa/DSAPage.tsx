@@ -2,11 +2,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import DSAHeader from "@/components/dsa/DSAHeader";
-import DSAStatsRow from "@/components/dsa/DSAStatsRow";
-import DSALogList from "@/components/dsa/DSALogList";
-import DSALogModal from "@/components/dsa/DSALogModal";
-import GlassCard from "@/components/shared/GlassCard";
 import {
   LineChart,
   Line,
@@ -16,67 +11,19 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { DSALog, DSAStats, CreateDSALogPayload } from "@/types";
+import DSAHeader from "@/components/dsa/DSAHeader";
+import DSAStatsRow from "@/components/dsa/DSAStatsRow";
+import DSALogList from "@/components/dsa/DSALogList";
+import DSALogModal from "@/components/dsa/DSALogModal";
+import GlassCard from "@/components/shared/GlassCard";
+import {
+  useDSALogs,
+  useDSAStats,
+  useCreateDSALog,
+  useDeleteDSALog,
+} from "@/hooks/useDSA";
+import type { CreateDSALogPayload, DSAStats } from "@/types";
 import toast from "react-hot-toast";
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockLogs: DSALog[] = [
-  {
-    id: 1,
-    userId: 1,
-    problemName: "Two Sum",
-    platform: "leetcode",
-    difficulty: "easy",
-    topic: "Arrays",
-    solvedAt: "2025-04-01",
-  },
-  {
-    id: 2,
-    userId: 1,
-    problemName: "Best Time to Buy Stock",
-    platform: "leetcode",
-    difficulty: "easy",
-    topic: "Arrays",
-    solvedAt: "2025-04-02",
-  },
-  {
-    id: 3,
-    userId: 1,
-    problemName: "Longest Substring Without Repeating",
-    platform: "leetcode",
-    difficulty: "medium",
-    topic: "Strings",
-    solvedAt: "2025-04-03",
-  },
-  {
-    id: 4,
-    userId: 1,
-    problemName: "Merge Intervals",
-    platform: "leetcode",
-    difficulty: "medium",
-    topic: "Arrays",
-    solvedAt: "2025-04-04",
-  },
-  {
-    id: 5,
-    userId: 1,
-    problemName: "Word Ladder",
-    platform: "leetcode",
-    difficulty: "hard",
-    topic: "Graphs",
-    solvedAt: "2025-04-05",
-  },
-];
-
-const mockChartData = [
-  { date: "Apr 1", solved: 2 },
-  { date: "Apr 2", solved: 5 },
-  { date: "Apr 3", solved: 9 },
-  { date: "Apr 4", solved: 12 },
-  { date: "Apr 5", solved: 18 },
-  { date: "Apr 6", solved: 22 },
-  { date: "Apr 7", solved: 27 },
-];
 
 // ─── Filter type ──────────────────────────────────────────────────────────────
 type FilterType = "all" | "easy" | "medium" | "hard";
@@ -88,45 +35,72 @@ const filters: { label: string; value: FilterType; color: string }[] = [
   { label: "Hard", value: "hard", color: "#f43f5e" },
 ];
 
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+function Skeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="h-12 rounded-xl animate-pulse"
+          style={{ background: "var(--muted)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function DSAPage() {
-  const [logs, setLogs] = useState<DSALog[]>(mockLogs);
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
 
-  // ─── Stats ──────────────────────────────────────────────────────────────────
-  const stats: DSAStats = {
-    total: logs.length,
-    easy: logs.filter((l) => l.difficulty === "easy").length,
-    medium: logs.filter((l) => l.difficulty === "medium").length,
-    hard: logs.filter((l) => l.difficulty === "hard").length,
-    byTopic: logs.reduce(
-      (acc, l) => {
-        acc[l.topic] = (acc[l.topic] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    ),
+  // ─── Queries ────────────────────────────────────────────────────────────────
+  const { data: logs = [], isLoading: logsLoading } = useDSALogs();
+  const { data: statsData, isLoading: statsLoading } = useDSAStats();
+  const createLog = useCreateDSALog();
+  const deleteLog = useDeleteDSALog();
+
+  // ─── Stats fallback ───────────────────────────────────────────────────────
+  const stats: DSAStats = statsData ?? {
+    total: 0,
+    easy: 0,
+    medium: 0,
+    hard: 0,
+    byTopic: {},
   };
 
-  // ─── Filtered logs ───────────────────────────────────────────────────────────
+  // ─── Chart data ───────────────────────────────────────────────────────────
+  const chartData = [...logs]
+    .sort((a, b) => a.solvedAt.localeCompare(b.solvedAt))
+    .reduce(
+      (acc, log, i) => {
+        acc.push({
+          date: log.solvedAt.slice(5),
+          solved: i + 1,
+        });
+        return acc;
+      },
+      [] as { date: string; solved: number }[],
+    );
+
+  // ─── Filtered logs ────────────────────────────────────────────────────────
   const filteredLogs =
     filter === "all" ? logs : logs.filter((l) => l.difficulty === filter);
 
-  // ─── Handlers ────────────────────────────────────────────────────────────────
+  // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleLog = (payload: CreateDSALogPayload) => {
-    const newLog: DSALog = {
-      id: Date.now(),
-      userId: 1,
-      ...payload,
-    };
-    setLogs((prev) => [newLog, ...prev]);
-    toast.success("Problem logged! 🎉");
+    createLog.mutate(payload, {
+      onSuccess: () => toast.success("Problem logged! 🎉"),
+      onError: () => toast.error("Failed to log problem"),
+    });
   };
 
   const handleDelete = (id: number) => {
-    setLogs((prev) => prev.filter((l) => l.id !== id));
-    toast.success("Log deleted");
+    deleteLog.mutate(id, {
+      onSuccess: () => toast.success("Log deleted"),
+      onError: () => toast.error("Failed to delete log"),
+    });
   };
 
   return (
@@ -135,7 +109,19 @@ export default function DSAPage() {
       <DSAHeader total={stats.total} onLogProblem={() => setModalOpen(true)} />
 
       {/* Stats row */}
-      <DSAStatsRow stats={stats} />
+      {statsLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-28 rounded-xl animate-pulse"
+              style={{ background: "var(--muted)" }}
+            />
+          ))}
+        </div>
+      ) : (
+        <DSAStatsRow stats={stats} />
+      )}
 
       {/* Progress chart */}
       <GlassCard padding="md" className="flex flex-col gap-4">
@@ -155,7 +141,7 @@ export default function DSAPage() {
         </div>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mockChartData}>
+            <LineChart data={chartData}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="var(--glass-border)"
@@ -232,7 +218,11 @@ export default function DSAPage() {
         </div>
 
         {/* List */}
-        <DSALogList logs={filteredLogs} onDelete={handleDelete} />
+        {logsLoading ? (
+          <Skeleton />
+        ) : (
+          <DSALogList logs={filteredLogs} onDelete={handleDelete} />
+        )}
       </GlassCard>
 
       {/* Modal */}

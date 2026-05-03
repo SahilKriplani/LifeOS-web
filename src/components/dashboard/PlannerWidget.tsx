@@ -5,58 +5,12 @@ import GlassCard from "@/components/shared/GlassCard";
 import { CheckCircle2, Circle, Plus } from "lucide-react";
 import { useState } from "react";
 import { cn, priorityColor } from "@/lib/utils";
-import type { Task } from "@/types";
+import { getTodayISO } from "@/lib/utils";
+import { useTasks, useCreateTask, useUpdateTask } from "@/hooks/useTasks";
+import type { Task, CreateTaskPayload } from "@/types";
+import toast from "react-hot-toast";
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockTasks: Task[] = [
-  {
-    id: 1,
-    userId: 1,
-    title: "Solve 3 LeetCode problems",
-    isDone: true,
-    scheduledDate: "2025-04-05",
-    priority: "high",
-    createdAt: "",
-  },
-  {
-    id: 2,
-    userId: 1,
-    title: "Morning workout — 45 mins",
-    isDone: true,
-    scheduledDate: "2025-04-05",
-    priority: "high",
-    createdAt: "",
-  },
-  {
-    id: 3,
-    userId: 1,
-    title: "Read system design chapter",
-    isDone: false,
-    scheduledDate: "2025-04-05",
-    priority: "medium",
-    createdAt: "",
-  },
-  {
-    id: 4,
-    userId: 1,
-    title: "Log today's weight and calories",
-    isDone: false,
-    scheduledDate: "2025-04-05",
-    priority: "medium",
-    createdAt: "",
-  },
-  {
-    id: 5,
-    userId: 1,
-    title: "Review DSA notes",
-    isDone: false,
-    scheduledDate: "2025-04-05",
-    priority: "low",
-    createdAt: "",
-  },
-];
-
-// ─── Task item component ──────────────────────────────────────────────────────
+// ─── Task item ────────────────────────────────────────────────────────────────
 function TaskItem({
   task,
   onToggle,
@@ -75,7 +29,6 @@ function TaskItem({
       style={{ background: "var(--muted)" }}
       onClick={() => onToggle(task.id)}
     >
-      {/* Checkbox */}
       <motion.div
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -87,8 +40,6 @@ function TaskItem({
           <Circle size={18} style={{ color: "var(--muted-foreground)" }} />
         )}
       </motion.div>
-
-      {/* Title */}
       <span
         className={cn(
           "text-sm flex-1 transition-all duration-200",
@@ -98,8 +49,6 @@ function TaskItem({
       >
         {task.title}
       </span>
-
-      {/* Priority dot */}
       <span
         className={cn(
           "text-xs font-semibold capitalize shrink-0",
@@ -112,34 +61,40 @@ function TaskItem({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function PlannerWidget() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const today = getTodayISO();
   const [newTask, setNewTask] = useState("");
   const [showInput, setShowInput] = useState(false);
+
+  const { data: tasks = [], isLoading } = useTasks(today);
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask(today);
 
   const completed = tasks.filter((t) => t.isDone).length;
   const total = tasks.length;
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
   const handleToggle = (id: number) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isDone: !t.isDone } : t)),
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    updateTask.mutate(
+      { id, payload: { isDone: !task.isDone } },
+      { onError: () => toast.error("Failed to update task") },
     );
   };
 
   const handleAddTask = () => {
     if (!newTask.trim()) return;
-    const task: Task = {
-      id: Date.now(),
-      userId: 1,
+    const payload: CreateTaskPayload = {
       title: newTask.trim(),
-      isDone: false,
-      scheduledDate: new Date().toISOString().split("T")[0],
+      scheduledDate: today,
       priority: "medium",
-      createdAt: "",
     };
-    setTasks((prev) => [...prev, task]);
+    createTask.mutate(payload, {
+      onSuccess: () => toast.success("Task added"),
+      onError: () => toast.error("Failed to add task"),
+    });
     setNewTask("");
     setShowInput(false);
   };
@@ -162,13 +117,11 @@ export default function PlannerWidget() {
             {completed} of {total} completed
           </p>
         </div>
-
-        {/* Add task button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowInput(!showInput)}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors duration-200"
+          className="w-7 h-7 rounded-lg flex items-center justify-center"
           style={{
             background: "var(--primary)",
             color: "var(--primary-foreground)",
@@ -247,13 +200,25 @@ export default function PlannerWidget() {
       </AnimatePresence>
 
       {/* Task list */}
-      <div className="flex flex-col gap-2 overflow-y-auto max-h-64">
-        <AnimatePresence>
-          {tasks.map((task) => (
-            <TaskItem key={task.id} task={task} onToggle={handleToggle} />
+      {isLoading ? (
+        <div className="flex flex-col gap-2">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="h-10 rounded-lg animate-pulse"
+              style={{ background: "var(--muted)" }}
+            />
           ))}
-        </AnimatePresence>
-      </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 overflow-y-auto max-h-64">
+          <AnimatePresence>
+            {tasks.map((task) => (
+              <TaskItem key={task.id} task={task} onToggle={handleToggle} />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
     </GlassCard>
   );
 }
