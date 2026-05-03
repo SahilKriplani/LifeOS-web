@@ -18,110 +18,67 @@ import FitnessLogModal from "@/components/fitness/FitnessLogModal";
 import GlassCard from "@/components/shared/GlassCard";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Dumbbell, Scale, Flame, Footprints, Trash2 } from "lucide-react";
-import type { FitnessLog, CreateFitnessLogPayload } from "@/types";
+import {
+  useFitnessLogs,
+  useFitnessStats,
+  useCreateFitnessLog,
+  useDeleteFitnessLog,
+} from "@/hooks/useFitness";
+import type { CreateFitnessLogPayload } from "@/types";
 import toast from "react-hot-toast";
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockLogs: FitnessLog[] = [
-  {
-    id: 1,
-    userId: 1,
-    logDate: "2025-04-01",
-    weightKg: 139,
-    calories: 2100,
-    steps: 4200,
-    notes: "",
-  },
-  {
-    id: 2,
-    userId: 1,
-    logDate: "2025-04-02",
-    weightKg: 138.5,
-    calories: 1900,
-    steps: 5100,
-    notes: "",
-  },
-  {
-    id: 3,
-    userId: 1,
-    logDate: "2025-04-03",
-    weightKg: 138.2,
-    calories: 2000,
-    steps: 6200,
-    notes: "",
-  },
-  {
-    id: 4,
-    userId: 1,
-    logDate: "2025-04-04",
-    weightKg: 137.8,
-    calories: 1800,
-    steps: 7500,
-    notes: "",
-  },
-  {
-    id: 5,
-    userId: 1,
-    logDate: "2025-04-05",
-    weightKg: 137.5,
-    calories: 1950,
-    steps: 8100,
-    notes: "Good workout",
-  },
-  {
-    id: 6,
-    userId: 1,
-    logDate: "2025-04-06",
-    weightKg: 136.9,
-    calories: 1750,
-    steps: 9200,
-    notes: "",
-  },
-  {
-    id: 7,
-    userId: 1,
-    logDate: "2025-04-07",
-    weightKg: 136.5,
-    calories: 2050,
-    steps: 7800,
-    notes: "",
-  },
-];
 
 // ─── Chart view type ──────────────────────────────────────────────────────────
 type ChartTab = "weight" | "calories" | "steps";
 
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+function Skeleton({ rows = 4 }: { rows?: number }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {[...Array(rows)].map((_, i) => (
+        <div
+          key={i}
+          className="h-12 rounded-xl animate-pulse"
+          style={{ background: "var(--muted)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function FitnessPage() {
-  const [logs, setLogs] = useState<FitnessLog[]>(mockLogs);
   const [modalOpen, setModalOpen] = useState(false);
   const [chartTab, setChartTab] = useState<ChartTab>("weight");
 
-  // ─── Latest log ───────────────────────────────────────────────────────────
-  const latest = logs[logs.length - 1];
+  // ─── Queries ────────────────────────────────────────────────────────────────
+  const { data: logs = [], isLoading: logsLoading } = useFitnessLogs();
+  const { data: stats, isLoading: statsLoading } = useFitnessStats();
+  const createLog = useCreateFitnessLog();
+  const deleteLog = useDeleteFitnessLog();
 
   // ─── Chart data ───────────────────────────────────────────────────────────
-  const chartData = logs.map((l) => ({
-    date: l.logDate.slice(5),
-    weight: l.weightKg,
-    calories: l.calories,
-    steps: l.steps,
-  }));
+  const chartData = [...logs]
+    .sort((a, b) => a.logDate.localeCompare(b.logDate))
+    .map((l) => ({
+      date: l.logDate.slice(5),
+      weight: Number(l.weightKg),
+      calories: l.calories,
+      steps: l.steps,
+    }));
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleLog = (payload: CreateFitnessLogPayload) => {
-    const newLog: FitnessLog = {
-      id: Date.now(),
-      userId: 1,
-      ...payload,
-    };
-    setLogs((prev) => [...prev, newLog]);
-    toast.success("Fitness log saved! 💪");
+    createLog.mutate(payload, {
+      onSuccess: () => toast.success("Fitness log saved! 💪"),
+      onError: () => toast.error("Failed to save log"),
+    });
   };
 
   const handleDelete = (id: number) => {
-    setLogs((prev) => prev.filter((l) => l.id !== id));
-    toast.success("Log deleted");
+    deleteLog.mutate(id, {
+      onSuccess: () => toast.success("Log deleted"),
+      onError: () => toast.error("Failed to delete log"),
+    });
   };
 
   const chartConfig = {
@@ -181,12 +138,24 @@ export default function FitnessPage() {
       </motion.div>
 
       {/* Stats */}
-      <FitnessStatsRow
-        currentWeight={latest?.weightKg ?? 134}
-        targetWeight={85}
-        calories={latest?.calories ?? 0}
-        steps={latest?.steps ?? 0}
-      />
+      {statsLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-28 rounded-xl animate-pulse"
+              style={{ background: "var(--muted)" }}
+            />
+          ))}
+        </div>
+      ) : (
+        <FitnessStatsRow
+          currentWeight={Number(stats?.currentWeight ?? 0)}
+          targetWeight={85}
+          calories={Math.round(stats?.averageCalories ?? 0)}
+          steps={Math.round(stats?.averageSteps ?? 0)}
+        />
+      )}
 
       {/* Charts */}
       <GlassCard padding="md" className="flex flex-col gap-4">
@@ -332,73 +301,86 @@ export default function FitnessPage() {
           Daily Logs
         </h3>
 
-        <div className="flex flex-col gap-2">
-          {/* Header row */}
-          <div
-            className="grid grid-cols-5 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-widest"
-            style={{
-              background: "var(--muted)",
-              color: "var(--muted-foreground)",
-            }}
-          >
-            <span>Date</span>
-            <span>Weight</span>
-            <span>Calories</span>
-            <span>Steps</span>
-            <span>Notes</span>
+        {logsLoading ? (
+          <Skeleton rows={5} />
+        ) : logs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <Dumbbell size={24} style={{ color: "var(--muted-foreground)" }} />
+            <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+              No logs yet — start tracking today
+            </p>
           </div>
-
-          {/* Log rows */}
-          {[...logs].reverse().map((log, i) => (
-            <motion.div
-              key={log.id}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: i * 0.03 }}
-              className="group grid grid-cols-5 px-4 py-3 rounded-xl text-sm items-center transition-all duration-200"
+        ) : (
+          <div className="flex flex-col gap-2">
+            {/* Header row */}
+            <div
+              className="grid grid-cols-5 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-widest"
               style={{
                 background: "var(--muted)",
-                border: "1px solid var(--glass-border)",
+                color: "var(--muted-foreground)",
               }}
             >
-              <span style={{ color: "var(--muted-foreground)" }}>
-                {log.logDate}
-              </span>
-              <span
-                className="font-semibold"
-                style={{ color: "var(--primary)" }}
-              >
-                {log.weightKg} kg
-              </span>
-              <span style={{ color: "var(--foreground)" }}>
-                {log.calories} kcal
-              </span>
-              <span style={{ color: "var(--foreground)" }}>
-                {log.steps.toLocaleString()}
-              </span>
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-xs truncate max-w-20"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {log.notes || "—"}
-                </span>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleDelete(log.id)}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              <span>Date</span>
+              <span>Weight</span>
+              <span>Calories</span>
+              <span>Steps</span>
+              <span>Notes</span>
+            </div>
+
+            {/* Log rows */}
+            {[...logs]
+              .sort((a, b) => b.logDate.localeCompare(a.logDate))
+              .map((log, i) => (
+                <motion.div
+                  key={log.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: i * 0.03 }}
+                  className="group grid grid-cols-5 px-4 py-3 rounded-xl text-sm items-center"
                   style={{
-                    background: "rgba(244,63,94,0.1)",
-                    color: "#f43f5e",
+                    background: "var(--muted)",
+                    border: "1px solid var(--glass-border)",
                   }}
                 >
-                  <Trash2 size={11} />
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                  <span style={{ color: "var(--muted-foreground)" }}>
+                    {log.logDate}
+                  </span>
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {log.weightKg} kg
+                  </span>
+                  <span style={{ color: "var(--foreground)" }}>
+                    {log.calories} kcal
+                  </span>
+                  <span style={{ color: "var(--foreground)" }}>
+                    {Number(log.steps).toLocaleString()}
+                  </span>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="text-xs truncate max-w-20"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      {log.notes || "—"}
+                    </span>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(log.id)}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{
+                        background: "rgba(244,63,94,0.1)",
+                        color: "#f43f5e",
+                      }}
+                    >
+                      <Trash2 size={11} />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
+          </div>
+        )}
       </GlassCard>
 
       {/* Modal */}

@@ -1,119 +1,94 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PlannerHeader from "@/components/planner/PlannerHeader";
 import TaskList from "@/components/planner/TaskList";
 import AddTaskModal from "@/components/planner/AddTaskModal";
 import GlassCard from "@/components/shared/GlassCard";
 import { getTodayISO } from "@/lib/utils";
+import {
+  useTasks,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+} from "@/hooks/useTasks";
 import type { Task, CreateTaskPayload } from "@/types";
 import toast from "react-hot-toast";
 
 // ─── Filter type ──────────────────────────────────────────────────────────────
 type FilterType = "all" | "pending" | "completed";
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockTasks: Task[] = [
-  {
-    id: 1,
-    userId: 1,
-    title: "Solve 3 LeetCode problems",
-    isDone: true,
-    scheduledDate: getTodayISO(),
-    priority: "high",
-    createdAt: "",
-  },
-  {
-    id: 2,
-    userId: 1,
-    title: "Morning workout — 45 mins",
-    isDone: true,
-    scheduledDate: getTodayISO(),
-    priority: "high",
-    createdAt: "",
-  },
-  {
-    id: 3,
-    userId: 1,
-    title: "Read system design chapter",
-    isDone: false,
-    scheduledDate: getTodayISO(),
-    priority: "medium",
-    createdAt: "",
-  },
-  {
-    id: 4,
-    userId: 1,
-    title: "Log today's weight and calories",
-    isDone: false,
-    scheduledDate: getTodayISO(),
-    priority: "medium",
-    createdAt: "",
-  },
-  {
-    id: 5,
-    userId: 1,
-    title: "Review DSA notes",
-    isDone: false,
-    scheduledDate: getTodayISO(),
-    priority: "low",
-    createdAt: "",
-  },
-];
-
-// ─── Filter tabs ──────────────────────────────────────────────────────────────
 const filters: { label: string; value: FilterType }[] = [
   { label: "All", value: "all" },
   { label: "Pending", value: "pending" },
   { label: "Completed", value: "completed" },
 ];
 
+// ─── Skeleton loader ──────────────────────────────────────────────────────────
+function TaskSkeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className="h-12 rounded-xl animate-pulse"
+          style={{ background: "var(--muted)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PlannerPage() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [selectedDate, setSelectedDate] = useState(getTodayISO());
   const [filter, setFilter] = useState<FilterType>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
 
-  // ─── Derived values ──────────────────────────────────────────────────────────
-  const todayTasks = tasks.filter((t) => t.scheduledDate === selectedDate);
-  const completed = todayTasks.filter((t) => t.isDone).length;
+  // ─── Queries ────────────────────────────────────────────────────────────────
+  const { data: tasks = [], isLoading } = useTasks(selectedDate);
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask(selectedDate);
+  const deleteTask = useDeleteTask(selectedDate);
+
+  // ─── Derived ────────────────────────────────────────────────────────────────
+  const completed = tasks.filter((t) => t.isDone).length;
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
-  const handleAddTask = (payload: CreateTaskPayload) => {
+  const handleAddTask = async (payload: CreateTaskPayload) => {
     if (editTask) {
-      // Edit mode
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === editTask.id
-            ? { ...t, title: payload.title, priority: payload.priority }
-            : t,
-        ),
+      updateTask.mutate(
+        {
+          id: editTask.id,
+          payload: {
+            title: payload.title,
+            priority: payload.priority,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Task updated");
+            setEditTask(null);
+          },
+          onError: () => toast.error("Failed to update task"),
+        },
       );
-      toast.success("Task updated");
-      setEditTask(null);
     } else {
-      // Add mode
-      const newTask: Task = {
-        id: Date.now(),
-        userId: 1,
-        title: payload.title,
-        isDone: false,
-        scheduledDate: payload.scheduledDate,
-        priority: payload.priority,
-        createdAt: new Date().toISOString(),
-      };
-      setTasks((prev) => [...prev, newTask]);
-      toast.success("Task added");
+      createTask.mutate(payload, {
+        onSuccess: () => toast.success("Task added"),
+        onError: () => toast.error("Failed to add task"),
+      });
     }
   };
 
   const handleToggle = (id: number) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isDone: !t.isDone } : t)),
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    updateTask.mutate(
+      { id, payload: { isDone: !task.isDone } },
+      { onError: () => toast.error("Failed to update task") },
     );
   };
 
@@ -123,8 +98,10 @@ export default function PlannerPage() {
   };
 
   const handleDelete = (id: number) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-    toast.success("Task deleted");
+    deleteTask.mutate(id, {
+      onSuccess: () => toast.success("Task deleted"),
+      onError: () => toast.error("Failed to delete task"),
+    });
   };
 
   const handleOpenAdd = () => {
@@ -138,7 +115,7 @@ export default function PlannerPage() {
       <PlannerHeader
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
-        totalTasks={todayTasks.length}
+        totalTasks={tasks.length}
         completedTasks={completed}
         onAddTask={handleOpenAdd}
       />
@@ -153,10 +130,10 @@ export default function PlannerPage() {
           {filters.map((f) => {
             const count =
               f.value === "all"
-                ? todayTasks.length
+                ? tasks.length
                 : f.value === "pending"
-                  ? todayTasks.filter((t) => !t.isDone).length
-                  : todayTasks.filter((t) => t.isDone).length;
+                  ? tasks.filter((t) => !t.isDone).length
+                  : tasks.filter((t) => t.isDone).length;
 
             return (
               <motion.button
@@ -174,7 +151,6 @@ export default function PlannerPage() {
                 }
               >
                 {f.label}
-                {/* Count badge */}
                 <span
                   className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
                   style={{
@@ -196,26 +172,30 @@ export default function PlannerPage() {
         </div>
 
         {/* Task list */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${selectedDate}-${filter}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <TaskList
-              tasks={todayTasks}
-              onToggle={handleToggle}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              filter={filter}
-            />
-          </motion.div>
-        </AnimatePresence>
+        {isLoading ? (
+          <TaskSkeleton />
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${selectedDate}-${filter}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <TaskList
+                tasks={tasks}
+                onToggle={handleToggle}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                filter={filter}
+              />
+            </motion.div>
+          </AnimatePresence>
+        )}
       </GlassCard>
 
-      {/* Add/Edit modal */}
+      {/* Modal */}
       <AddTaskModal
         open={modalOpen}
         onClose={() => {
