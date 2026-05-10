@@ -18,90 +18,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  useGoals,
+  useCreateGoal,
+  useDeleteGoal,
+  type Goal,
+  type CreateGoalPayload,
+} from "@/hooks/useGoals";
 import toast from "react-hot-toast";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Goal {
-  id: number;
-  title: string;
-  description: string;
-  target: number;
-  current: number;
-  unit: string;
-  color: string;
-  category: "dsa" | "fitness" | "career" | "personal";
-  deadline: string;
-}
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockGoals: Goal[] = [
-  {
-    id: 1,
-    title: "Solve 300 DSA Problems",
-    description: "Complete 300 LeetCode/GFG problems before April 2027",
-    target: 300,
-    current: 142,
-    unit: "problems",
-    color: "#14B8A6",
-    category: "dsa",
-    deadline: "2027-04-01",
-  },
-  {
-    id: 2,
-    title: "Reach 85kg",
-    description: "Lose weight from 139kg to 85kg in 12-15 months",
-    target: 54,
-    current: 5,
-    unit: "kg lost",
-    color: "#8b5cf6",
-    category: "fitness",
-    deadline: "2026-07-01",
-  },
-  {
-    id: 3,
-    title: "Land a Top Product Role",
-    description: "Get into Google, Meta, Stripe or similar at 30-40 LPA",
-    target: 1,
-    current: 0,
-    unit: "offers",
-    color: "#f59e0b",
-    category: "career",
-    deadline: "2027-04-01",
-  },
-  {
-    id: 4,
-    title: "365 Day Streak",
-    description: "Maintain a daily activity streak for a full year",
-    target: 365,
-    current: 21,
-    unit: "days",
-    color: "#f97316",
-    category: "personal",
-    deadline: "2027-01-01",
-  },
-  {
-    id: 5,
-    title: "Learn System Design",
-    description: "Complete system design preparation — HLD + LLD",
-    target: 20,
-    current: 4,
-    unit: "topics",
-    color: "#06b6d4",
-    category: "career",
-    deadline: "2026-12-01",
-  },
-  {
-    id: 6,
-    title: "10,000 Steps Daily",
-    description: "Hit 10k steps every day for 30 consecutive days",
-    target: 30,
-    current: 12,
-    unit: "days",
-    color: "#ec4899",
-    category: "fitness",
-    deadline: "2026-06-01",
-  },
-];
 
 // ─── Category config ──────────────────────────────────────────────────────────
 const categoryConfig = {
@@ -113,6 +37,61 @@ const categoryConfig = {
 
 type FilterType = "all" | "dsa" | "fitness" | "career" | "personal";
 
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+function GoalSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={i}
+          className="h-52 rounded-2xl animate-pulse"
+          style={{ background: "var(--muted)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-20 gap-4"
+    >
+      <div
+        className="w-14 h-14 rounded-full flex items-center justify-center"
+        style={{ background: "var(--muted)" }}
+      >
+        <Target size={24} style={{ color: "var(--muted-foreground)" }} />
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <p
+          className="text-sm font-semibold"
+          style={{ color: "var(--foreground)" }}
+        >
+          No goals yet
+        </p>
+        <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+          Add your first goal to start tracking
+        </p>
+      </div>
+      <Button
+        onClick={onAdd}
+        className="mt-2"
+        style={{
+          background: "var(--primary)",
+          color: "var(--primary-foreground)",
+        }}
+      >
+        <Plus size={14} className="mr-1" />
+        Add First Goal
+      </Button>
+    </motion.div>
+  );
+}
+
 // ─── Goal card ────────────────────────────────────────────────────────────────
 function GoalCard({
   goal,
@@ -121,7 +100,7 @@ function GoalCard({
   goal: Goal;
   onDelete: (id: number) => void;
 }) {
-  const percent = Math.round((goal.current / goal.target) * 100);
+  const percent = Math.min(Math.round((goal.current / goal.target) * 100), 100);
   const isComplete = percent >= 100;
   const cat = categoryConfig[goal.category];
 
@@ -139,7 +118,6 @@ function GoalCard({
         border: "1px solid var(--glass-border)",
       }}
     >
-      {/* Complete shimmer */}
       {isComplete && (
         <BorderBeam
           size={200}
@@ -175,17 +153,18 @@ function GoalCard({
           >
             {goal.title}
           </h3>
-          <p
-            className="text-xs leading-relaxed"
-            style={{ color: "var(--muted-foreground)" }}
-          >
-            {goal.description}
-          </p>
+          {goal.description && (
+            <p
+              className="text-xs leading-relaxed"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              {goal.description}
+            </p>
+          )}
         </div>
 
-        {/* Progress ring */}
         <ProgressRing
-          value={Math.min(percent, 100)}
+          value={percent}
           color={goal.color}
           size={72}
           strokeWidth={6}
@@ -209,7 +188,7 @@ function GoalCard({
         >
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${Math.min(percent, 100)}%` }}
+            animate={{ width: `${percent}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
             className="h-full rounded-full"
             style={{ background: goal.color }}
@@ -227,10 +206,7 @@ function GoalCard({
           whileTap={{ scale: 0.9 }}
           onClick={() => onDelete(goal.id)}
           className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          style={{
-            background: "rgba(244,63,94,0.1)",
-            color: "#f43f5e",
-          }}
+          style={{ background: "rgba(244,63,94,0.1)", color: "#f43f5e" }}
         >
           <Trash2 size={12} />
         </motion.button>
@@ -244,10 +220,12 @@ function AddGoalModal({
   open,
   onClose,
   onSubmit,
+  isLoading,
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (goal: Omit<Goal, "id">) => void;
+  onSubmit: (goal: CreateGoalPayload) => void;
+  isLoading: boolean;
 }) {
   const [form, setForm] = useState({
     title: "",
@@ -270,6 +248,9 @@ function AddGoalModal({
       target: Number(form.target),
       current: Number(form.current),
     });
+  };
+
+  const handleClose = () => {
     setForm({
       title: "",
       description: "",
@@ -284,15 +265,15 @@ function AddGoalModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg 
-             -translate-x-1/2 -translate-y-1/2 
-             overflow-hidden border-0 p-0"
+        className="relative border-0 p-0 max-w-lg w-full"
         style={{
           background: "var(--glass-bg)",
           backdropFilter: "blur(24px)",
           border: "1px solid var(--glass-border)",
+          maxHeight: "85vh",
+          overflowY: "auto",
         }}
       >
         <BorderBeam
@@ -420,61 +401,59 @@ function AddGoalModal({
               </div>
             </div>
 
-            {/* Category + Deadline */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label
-                  className="text-xs font-semibold uppercase tracking-widest"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  Category
-                </Label>
-                <div
-                  className="flex gap-1 flex-wrap p-1 rounded-xl"
-                  style={{ background: "var(--muted)" }}
-                >
-                  {(Object.keys(categoryConfig) as Goal["category"][]).map(
-                    (cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setForm({ ...form, category: cat })}
-                        className="flex-1 py-1 rounded-lg text-xs font-medium capitalize transition-all duration-200"
-                        style={
-                          form.category === cat
-                            ? {
-                                background: categoryConfig[cat].color,
-                                color: "#fff",
-                              }
-                            : { color: "var(--muted-foreground)" }
-                        }
-                      >
-                        {cat}
-                      </button>
-                    ),
-                  )}
-                </div>
+            {/* Category */}
+            <div className="flex flex-col gap-1.5">
+              <Label
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                Category
+              </Label>
+              <div
+                className="flex gap-1 p-1 rounded-xl"
+                style={{ background: "var(--muted)" }}
+              >
+                {(Object.keys(categoryConfig) as Goal["category"][]).map(
+                  (cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setForm({ ...form, category: cat })}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-medium capitalize transition-all duration-200"
+                      style={
+                        form.category === cat
+                          ? {
+                              background: categoryConfig[cat].color,
+                              color: "#fff",
+                            }
+                          : { color: "var(--muted-foreground)" }
+                      }
+                    >
+                      {cat}
+                    </button>
+                  ),
+                )}
               </div>
-              <div className="flex flex-col gap-1.5">
-                <Label
-                  className="text-xs font-semibold uppercase tracking-widest"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  Deadline *
-                </Label>
-                <Input
-                  type="date"
-                  value={form.deadline}
-                  onChange={(e) =>
-                    setForm({ ...form, deadline: e.target.value })
-                  }
-                  style={{
-                    background: "var(--muted)",
-                    border: "1px solid var(--glass-border)",
-                    color: "var(--foreground)",
-                  }}
-                />
-              </div>
+            </div>
+
+            {/* Deadline */}
+            <div className="flex flex-col gap-1.5">
+              <Label
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                Deadline *
+              </Label>
+              <Input
+                type="date"
+                value={form.deadline}
+                onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                style={{
+                  background: "var(--muted)",
+                  border: "1px solid var(--glass-border)",
+                  color: "var(--foreground)",
+                }}
+              />
             </div>
 
             {/* Color picker */}
@@ -516,7 +495,7 @@ function AddGoalModal({
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1"
               style={{
                 background: "var(--muted)",
@@ -528,13 +507,14 @@ function AddGoalModal({
             </Button>
             <Button
               onClick={handleSubmit}
+              disabled={isLoading}
               className="flex-1 font-semibold"
               style={{
                 background: "var(--primary)",
                 color: "var(--primary-foreground)",
               }}
             >
-              Add Goal
+              {isLoading ? "Adding..." : "Add Goal"}
             </Button>
           </div>
         </div>
@@ -545,28 +525,44 @@ function AddGoalModal({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function GoalsPage() {
-  const [goals, setGoals] = useState<Goal[]>(mockGoals);
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
 
+  // ─── Queries ────────────────────────────────────────────────────────────────
+  const { data: goals = [], isLoading } = useGoals();
+  const createGoal = useCreateGoal();
+  const deleteGoal = useDeleteGoal();
+
+  // ─── Derived ────────────────────────────────────────────────────────────────
   const filtered =
     filter === "all" ? goals : goals.filter((g) => g.category === filter);
 
-  const overallPercent = Math.round(
-    goals.reduce(
-      (sum, g) => sum + Math.min((g.current / g.target) * 100, 100),
-      0,
-    ) / goals.length,
-  );
+  const overallPercent =
+    goals.length === 0
+      ? 0
+      : Math.round(
+          goals.reduce(
+            (sum, g) => sum + Math.min((g.current / g.target) * 100, 100),
+            0,
+          ) / goals.length,
+        );
 
-  const handleAdd = (goal: Omit<Goal, "id">) => {
-    setGoals((prev) => [...prev, { ...goal, id: Date.now() }]);
-    toast.success("Goal added! 🎯");
+  // ─── Handlers ────────────────────────────────────────────────────────────────
+  const handleAdd = (payload: CreateGoalPayload) => {
+    createGoal.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Goal added! 🎯");
+        setModalOpen(false);
+      },
+      onError: () => toast.error("Failed to add goal"),
+    });
   };
 
   const handleDelete = (id: number) => {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
-    toast.success("Goal removed");
+    deleteGoal.mutate(id, {
+      onSuccess: () => toast.success("Goal removed"),
+      onError: () => toast.error("Failed to delete goal"),
+    });
   };
 
   return (
@@ -604,71 +600,76 @@ export default function GoalsPage() {
       </motion.div>
 
       {/* Overall progress */}
-      <GlassCard padding="md">
-        <div className="flex items-center gap-6 flex-wrap">
-          <ProgressRing
-            value={overallPercent}
-            color="var(--primary)"
-            size={100}
-            strokeWidth={8}
-            label="Overall"
-            showPercent
-          />
-          <div className="flex flex-col gap-3 flex-1">
-            <p
-              className="text-sm font-semibold"
-              style={{ color: "var(--foreground)" }}
-            >
-              Overall Goal Completion
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {(Object.keys(categoryConfig) as Goal["category"][]).map(
-                (cat) => {
-                  const catGoals = goals.filter((g) => g.category === cat);
-                  const catPercent =
-                    catGoals.length === 0
-                      ? 0
-                      : Math.round(
-                          catGoals.reduce(
-                            (sum, g) =>
-                              sum + Math.min((g.current / g.target) * 100, 100),
-                            0,
-                          ) / catGoals.length,
-                        );
-                  return (
-                    <div
-                      key={cat}
-                      className="flex flex-col gap-1 px-3 py-2 rounded-lg"
-                      style={{ background: "var(--muted)" }}
-                    >
-                      <span
-                        className="text-xs capitalize font-medium"
-                        style={{ color: categoryConfig[cat].color }}
+      {!isLoading && goals.length > 0 && (
+        <GlassCard padding="md">
+          <div className="flex items-center gap-6 flex-wrap">
+            <ProgressRing
+              value={overallPercent}
+              color="var(--primary)"
+              size={100}
+              strokeWidth={8}
+              label="Overall"
+              showPercent
+            />
+            <div className="flex flex-col gap-3 flex-1">
+              <p
+                className="text-sm font-semibold"
+                style={{ color: "var(--foreground)" }}
+              >
+                Overall Goal Completion
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {(Object.keys(categoryConfig) as Goal["category"][]).map(
+                  (cat) => {
+                    const catGoals = goals.filter((g) => g.category === cat);
+                    const catPercent =
+                      catGoals.length === 0
+                        ? 0
+                        : Math.round(
+                            catGoals.reduce(
+                              (sum, g) =>
+                                sum +
+                                Math.min((g.current / g.target) * 100, 100),
+                              0,
+                            ) / catGoals.length,
+                          );
+                    return (
+                      <div
+                        key={cat}
+                        className="flex flex-col gap-1 px-3 py-2 rounded-lg"
+                        style={{ background: "var(--muted)" }}
                       >
-                        {cat}
-                      </span>
-                      <span
-                        className="text-lg font-bold"
-                        style={{ color: "var(--foreground)" }}
-                      >
-                        {catPercent}%
-                      </span>
-                    </div>
-                  );
-                },
-              )}
+                        <span
+                          className="text-xs capitalize font-medium"
+                          style={{ color: categoryConfig[cat].color }}
+                        >
+                          {cat}
+                        </span>
+                        <span
+                          className="text-lg font-bold"
+                          style={{ color: "var(--foreground)" }}
+                        >
+                          {catPercent}%
+                        </span>
+                      </div>
+                    );
+                  },
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </GlassCard>
+        </GlassCard>
+      )}
 
       {/* Filter tabs */}
-      <div
-        className="flex gap-1 p-1 rounded-xl w-fit"
-        style={{ background: "var(--muted)" }}
-      >
-        {(["all", "dsa", "fitness", "career", "personal"] as FilterType[]).map(
-          (f) => (
+      {!isLoading && goals.length > 0 && (
+        <div
+          className="flex gap-1 p-1 rounded-xl w-fit"
+          style={{ background: "var(--muted)" }}
+        >
+          {(
+            ["all", "dsa", "fitness", "career", "personal"] as FilterType[]
+          ).map((f) => (
             <motion.button
               key={f}
               onClick={() => setFilter(f)}
@@ -685,27 +686,34 @@ export default function GoalsPage() {
             >
               {f}
             </motion.button>
-          ),
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Goals grid */}
-      <motion.div
-        layout
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
-      >
-        <AnimatePresence>
-          {filtered.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} onDelete={handleDelete} />
-          ))}
-        </AnimatePresence>
-      </motion.div>
+      {isLoading ? (
+        <GoalSkeleton />
+      ) : goals.length === 0 ? (
+        <EmptyState onAdd={() => setModalOpen(true)} />
+      ) : (
+        <motion.div
+          layout
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
+        >
+          <AnimatePresence>
+            {filtered.map((goal) => (
+              <GoalCard key={goal.id} goal={goal} onDelete={handleDelete} />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* Modal */}
       <AddGoalModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={handleAdd}
+        isLoading={createGoal.isPending}
       />
     </div>
   );
