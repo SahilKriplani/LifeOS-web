@@ -11,6 +11,7 @@ import {
   Dumbbell,
   LayoutDashboard,
   LogOut,
+  Settings,
   Target,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ const navLinks = [
   { label: "DSA", href: "/dashboard/dsa", icon: Code2 },
   { label: "Fitness", href: "/dashboard/fitness", icon: Dumbbell },
   { label: "Goals", href: "/dashboard/goals", icon: Target },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 // ─── Animation variants ───────────────────────────────────────────────────────
