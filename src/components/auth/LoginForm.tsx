@@ -47,7 +47,12 @@ export default function LoginForm() {
     try {
       const res = await api.post("/auth/login", data);
 
-      // Store token on frontend domain so proxy.ts can read it
+      console.log("LOGIN RESPONSE:", res.data);
+
+      if (!res.data?.token || res.data.token === "undefined") {
+        throw new Error("Token missing from backend response");
+      }
+
       Cookies.set("access_token", res.data.token, {
         expires: 7,
         path: "/",
@@ -61,15 +66,22 @@ export default function LoginForm() {
 
       router.replace("/dashboard");
     } catch (err: unknown) {
+      Cookies.remove("access_token");
+
       const error = err as {
         response?: {
           data?: {
             detail?: string;
           };
         };
+        message?: string;
       };
 
-      toast.error(error.response?.data?.detail || "Invalid email or password");
+      toast.error(
+        error.response?.data?.detail ||
+          error.message ||
+          "Invalid email or password",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -82,7 +94,6 @@ export default function LoginForm() {
       transition={{ duration: 0.4 }}
       className="glass rounded-2xl p-8 w-full max-w-md"
     >
-      {/* Header */}
       <div className="flex flex-col gap-1 mb-8">
         <h1
           className="text-2xl font-bold tracking-tight"
@@ -96,9 +107,7 @@ export default function LoginForm() {
         </p>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-        {/* Email */}
         <div className="flex flex-col gap-1.5">
           <Label
             className="text-xs font-semibold uppercase tracking-widest"
@@ -128,7 +137,6 @@ export default function LoginForm() {
           )}
         </div>
 
-        {/* Password */}
         <div className="flex flex-col gap-1.5">
           <Label
             className="text-xs font-semibold uppercase tracking-widest"
@@ -157,7 +165,6 @@ export default function LoginForm() {
           )}
         </div>
 
-        {/* Submit */}
         <Button
           type="submit"
           disabled={isSubmitting}
@@ -178,7 +185,6 @@ export default function LoginForm() {
         </Button>
       </form>
 
-      {/* Footer */}
       <p
         className="text-sm text-center mt-6"
         style={{ color: "var(--muted-foreground)" }}
