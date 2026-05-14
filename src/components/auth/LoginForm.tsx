@@ -8,6 +8,7 @@ import * as yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,18 +37,38 @@ export default function LoginForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: yupResolver(schema) });
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+
     try {
       const res = await api.post("/auth/login", data);
+
+      // Store token on frontend domain so proxy.ts can read it
+      Cookies.set("access_token", res.data.token, {
+        expires: 7,
+        path: "/",
+        secure: true,
+        sameSite: "lax",
+      });
+
       setUser(res.data.user);
+
       toast.success("Welcome back!");
-      router.refresh();
+
       router.replace("/dashboard");
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } };
+      const error = err as {
+        response?: {
+          data?: {
+            detail?: string;
+          };
+        };
+      };
+
       toast.error(error.response?.data?.detail || "Invalid email or password");
     } finally {
       setIsSubmitting(false);
@@ -69,6 +90,7 @@ export default function LoginForm() {
         >
           Welcome back
         </h1>
+
         <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
           Sign in to your LifeOS account
         </p>
@@ -84,6 +106,7 @@ export default function LoginForm() {
           >
             Email
           </Label>
+
           <Input
             {...register("email")}
             type="email"
@@ -91,10 +114,13 @@ export default function LoginForm() {
             className="bg-transparent"
             style={{
               background: "var(--muted)",
-              border: `1px solid ${errors.email ? "#f43f5e" : "var(--glass-border)"}`,
+              border: `1px solid ${
+                errors.email ? "#f43f5e" : "var(--glass-border)"
+              }`,
               color: "var(--foreground)",
             }}
           />
+
           {errors.email && (
             <span className="text-xs text-rose-400">
               {errors.email.message}
@@ -110,16 +136,20 @@ export default function LoginForm() {
           >
             Password
           </Label>
+
           <Input
             {...register("password")}
             type="password"
             placeholder="••••••••"
             style={{
               background: "var(--muted)",
-              border: `1px solid ${errors.password ? "#f43f5e" : "var(--glass-border)"}`,
+              border: `1px solid ${
+                errors.password ? "#f43f5e" : "var(--glass-border)"
+              }`,
               color: "var(--foreground)",
             }}
           />
+
           {errors.password && (
             <span className="text-xs text-rose-400">
               {errors.password.message}
