@@ -17,34 +17,34 @@ export default function StatsRow({
   dailyCompletion,
 }: StatsRowProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
       <StatBadge
         label="DSA Solved"
         value={dsaSolved}
         icon={Code2}
         trend="up"
-        trendValue="3 today"
+        trendValue="target 300"
       />
       <StatBadge
-        label="Current Streak"
-        value={`${currentStreak} days`}
+        label="Streak"
+        value={`${currentStreak}d`}
         icon={Flame}
         trend="up"
-        trendValue="best: 21"
+        trendValue="keep going"
       />
       <StatBadge
         label="Weight"
-        value={`${currentWeight} kg`}
+        value={currentWeight > 0 ? `${currentWeight}kg` : "—"}
         icon={Scale}
         trend="down"
-        trendValue="−0.5 kg"
+        trendValue="→ 85kg"
       />
       <StatBadge
         label="Daily Tasks"
         value={`${dailyCompletion}%`}
         icon={CheckCircle2}
         trend="up"
-        trendValue="8/10 done"
+        trendValue="completion"
       />
     </div>
   );

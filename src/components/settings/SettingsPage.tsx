@@ -53,42 +53,50 @@ function Section({
   description,
   icon: Icon,
   children,
+  delay = 0,
 }: {
   title: string;
   description: string;
   icon: React.ElementType;
   children: React.ReactNode;
+  delay?: number;
 }) {
   return (
-    <GlassCard padding="md" className="flex flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{
-            background: "var(--muted)",
-            border: "1px solid var(--glass-border)",
-          }}
-        >
-          <Icon size={16} style={{ color: "var(--primary)" }} />
-        </div>
-        <div>
-          <h2
-            className="text-sm font-semibold"
-            style={{ color: "var(--foreground)" }}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+    >
+      <GlassCard padding="md" className="flex flex-col gap-5">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              background: "var(--muted)",
+              border: "1px solid var(--glass-border)",
+            }}
           >
-            {title}
-          </h2>
-          <p
-            className="text-xs mt-0.5"
-            style={{ color: "var(--muted-foreground)" }}
-          >
-            {description}
-          </p>
+            <Icon size={16} style={{ color: "var(--primary)" }} />
+          </div>
+          <div>
+            <h2
+              className="text-sm font-semibold"
+              style={{ color: "var(--foreground)" }}
+            >
+              {title}
+            </h2>
+            <p
+              className="text-xs mt-0.5"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              {description}
+            </p>
+          </div>
         </div>
-      </div>
-      <Separator style={{ background: "var(--glass-border)" }} />
-      {children}
-    </GlassCard>
+        <Separator style={{ background: "var(--glass-border)" }} />
+        {children}
+      </GlassCard>
+    </motion.div>
   );
 }
 
@@ -100,7 +108,6 @@ export default function SettingsPage() {
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
-  // ─── Profile form ──────────────────────────────────────────────────────────
   const {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
@@ -110,7 +117,6 @@ export default function SettingsPage() {
     defaultValues: { name: user?.name ?? "" },
   });
 
-  // ─── Password form ─────────────────────────────────────────────────────────
   const {
     register: registerPassword,
     handleSubmit: handlePasswordSubmit,
@@ -118,7 +124,6 @@ export default function SettingsPage() {
     formState: { errors: passwordErrors, isSubmitting: passwordSubmitting },
   } = useForm<PasswordForm>({ resolver: yupResolver(passwordSchema) });
 
-  // ─── Handlers ──────────────────────────────────────────────────────────────
   const onProfileSubmit = async (data: ProfileForm) => {
     try {
       const res = await api.patch("/auth/update-profile", { name: data.name });
@@ -148,7 +153,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
+    <div className="flex flex-col gap-4 md:gap-6 max-w-2xl">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -157,234 +162,214 @@ export default function SettingsPage() {
         className="flex flex-col gap-1"
       >
         <div className="flex items-center gap-2">
-          <Settings size={20} style={{ color: "var(--primary)" }} />
+          <Settings size={18} style={{ color: "var(--primary)" }} />
           <h1
-            className="text-2xl font-bold tracking-tight"
+            className="text-xl md:text-2xl font-bold tracking-tight"
             style={{ color: "var(--foreground)" }}
           >
             Settings
           </h1>
         </div>
-        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+        <p
+          className="text-xs md:text-sm"
+          style={{ color: "var(--muted-foreground)" }}
+        >
           Manage your account and preferences
         </p>
       </motion.div>
 
-      {/* Profile section */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+      {/* Profile */}
+      <Section
+        title="Profile"
+        description="Update your display name"
+        icon={User}
+        delay={0.1}
       >
-        <Section
-          title="Profile"
-          description="Update your display name"
-          icon={User}
+        <form
+          onSubmit={handleProfileSubmit(onProfileSubmit)}
+          className="flex flex-col gap-4"
         >
-          <form
-            onSubmit={handleProfileSubmit(onProfileSubmit)}
-            className="flex flex-col gap-4"
-          >
-            {/* Name */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                Full Name
-              </Label>
-              <Input
-                {...registerProfile("name")}
-                placeholder="Your name"
-                style={{
-                  background: "var(--muted)",
-                  border: `1px solid ${profileErrors.name ? "#f43f5e" : "var(--glass-border)"}`,
-                  color: "var(--foreground)",
-                }}
-              />
-              {profileErrors.name && (
-                <span className="text-xs text-rose-400">
-                  {profileErrors.name.message}
-                </span>
-              )}
-            </div>
-
-            {/* Email — readonly */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                Email
-              </Label>
-              <Input
-                value={user?.email ?? ""}
-                disabled
-                style={{
-                  background: "var(--muted)",
-                  border: "1px solid var(--glass-border)",
-                  color: "var(--muted-foreground)",
-                  opacity: 0.6,
-                }}
-              />
-              <span
-                className="text-xs"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                Email cannot be changed
+          <div className="flex flex-col gap-1.5">
+            <Label
+              className="text-xs font-semibold uppercase tracking-widest"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              Full Name
+            </Label>
+            <Input
+              {...registerProfile("name")}
+              placeholder="Your name"
+              style={{
+                background: "var(--muted)",
+                border: `1px solid ${profileErrors.name ? "#f43f5e" : "var(--glass-border)"}`,
+                color: "var(--foreground)",
+              }}
+            />
+            {profileErrors.name && (
+              <span className="text-xs text-rose-400">
+                {profileErrors.name.message}
               </span>
-            </div>
+            )}
+          </div>
 
-            <Button
-              type="submit"
-              disabled={profileSubmitting}
-              className="w-fit font-semibold flex items-center gap-2"
-              style={{
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-              }}
+          <div className="flex flex-col gap-1.5">
+            <Label
+              className="text-xs font-semibold uppercase tracking-widest"
+              style={{ color: "var(--muted-foreground)" }}
             >
-              {profileSubmitting ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : profileSuccess ? (
-                <CheckCircle2 size={14} />
-              ) : null}
-              {profileSubmitting
-                ? "Saving..."
-                : profileSuccess
-                  ? "Saved!"
-                  : "Save Changes"}
-            </Button>
-          </form>
-        </Section>
-      </motion.div>
+              Email
+            </Label>
+            <Input
+              value={user?.email ?? ""}
+              disabled
+              style={{
+                background: "var(--muted)",
+                border: "1px solid var(--glass-border)",
+                color: "var(--muted-foreground)",
+                opacity: 0.6,
+              }}
+            />
+            <span
+              className="text-xs"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              Email cannot be changed
+            </span>
+          </div>
 
-      {/* Password section */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <Section
-          title="Change Password"
-          description="Update your account password"
-          icon={Lock}
-        >
-          <form
-            onSubmit={handlePasswordSubmit(onPasswordSubmit)}
-            className="flex flex-col gap-4"
+          <Button
+            type="submit"
+            disabled={profileSubmitting}
+            className="w-full sm:w-fit font-semibold flex items-center justify-center gap-2"
+            style={{
+              background: "var(--primary)",
+              color: "var(--primary-foreground)",
+            }}
           >
-            {/* Current password */}
-            <div className="flex flex-col gap-1.5">
+            {profileSubmitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : profileSuccess ? (
+              <CheckCircle2 size={14} />
+            ) : null}
+            {profileSubmitting
+              ? "Saving..."
+              : profileSuccess
+                ? "Saved!"
+                : "Save Changes"}
+          </Button>
+        </form>
+      </Section>
+
+      {/* Password */}
+      <Section
+        title="Change Password"
+        description="Update your account password"
+        icon={Lock}
+        delay={0.2}
+      >
+        <form
+          onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+          className="flex flex-col gap-4"
+        >
+          {[
+            {
+              id: "currentPassword" as const,
+              label: "Current Password",
+              error: passwordErrors.currentPassword,
+            },
+            {
+              id: "newPassword" as const,
+              label: "New Password",
+              error: passwordErrors.newPassword,
+            },
+            {
+              id: "confirmPassword" as const,
+              label: "Confirm New Password",
+              error: passwordErrors.confirmPassword,
+            },
+          ].map((field) => (
+            <div key={field.id} className="flex flex-col gap-1.5">
               <Label
                 className="text-xs font-semibold uppercase tracking-widest"
                 style={{ color: "var(--muted-foreground)" }}
               >
-                Current Password
+                {field.label}
               </Label>
               <Input
-                {...registerPassword("currentPassword")}
+                {...registerPassword(field.id)}
                 type="password"
                 placeholder="••••••••"
                 style={{
                   background: "var(--muted)",
-                  border: `1px solid ${passwordErrors.currentPassword ? "#f43f5e" : "var(--glass-border)"}`,
+                  border: `1px solid ${field.error ? "#f43f5e" : "var(--glass-border)"}`,
                   color: "var(--foreground)",
                 }}
               />
-              {passwordErrors.currentPassword && (
+              {field.error && (
                 <span className="text-xs text-rose-400">
-                  {passwordErrors.currentPassword.message}
+                  {field.error.message}
                 </span>
               )}
             </div>
+          ))}
 
-            {/* New password */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                New Password
-              </Label>
-              <Input
-                {...registerPassword("newPassword")}
-                type="password"
-                placeholder="••••••••"
-                style={{
-                  background: "var(--muted)",
-                  border: `1px solid ${passwordErrors.newPassword ? "#f43f5e" : "var(--glass-border)"}`,
-                  color: "var(--foreground)",
-                }}
-              />
-              {passwordErrors.newPassword && (
-                <span className="text-xs text-rose-400">
-                  {passwordErrors.newPassword.message}
-                </span>
-              )}
-            </div>
+          <Button
+            type="submit"
+            disabled={passwordSubmitting}
+            className="w-full sm:w-fit font-semibold flex items-center justify-center gap-2"
+            style={{
+              background: "var(--primary)",
+              color: "var(--primary-foreground)",
+            }}
+          >
+            {passwordSubmitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : passwordSuccess ? (
+              <CheckCircle2 size={14} />
+            ) : null}
+            {passwordSubmitting
+              ? "Changing..."
+              : passwordSuccess
+                ? "Changed!"
+                : "Change Password"}
+          </Button>
+        </form>
+      </Section>
 
-            {/* Confirm password */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                Confirm New Password
-              </Label>
-              <Input
-                {...registerPassword("confirmPassword")}
-                type="password"
-                placeholder="••••••••"
-                style={{
-                  background: "var(--muted)",
-                  border: `1px solid ${passwordErrors.confirmPassword ? "#f43f5e" : "var(--glass-border)"}`,
-                  color: "var(--foreground)",
-                }}
-              />
-              {passwordErrors.confirmPassword && (
-                <span className="text-xs text-rose-400">
-                  {passwordErrors.confirmPassword.message}
-                </span>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              disabled={passwordSubmitting}
-              className="w-fit font-semibold flex items-center gap-2"
-              style={{
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-              }}
-            >
-              {passwordSubmitting ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : passwordSuccess ? (
-                <CheckCircle2 size={14} />
-              ) : null}
-              {passwordSubmitting
-                ? "Changing..."
-                : passwordSuccess
-                  ? "Changed!"
-                  : "Change Password"}
-            </Button>
-          </form>
-        </Section>
-      </motion.div>
-
-      {/* Appearance section */}
+      {/* Appearance */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
       >
-        <Section
-          title="Appearance"
-          description="Customize your visual experience"
-          icon={Sun}
-        >
-          <div className="flex items-center justify-between">
+        <GlassCard padding="md">
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{
+                background: "var(--muted)",
+                border: "1px solid var(--glass-border)",
+              }}
+            >
+              <Sun size={16} style={{ color: "var(--primary)" }} />
+            </div>
+            <div>
+              <h2
+                className="text-sm font-semibold"
+                style={{ color: "var(--foreground)" }}
+              >
+                Appearance
+              </h2>
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                Customize your visual experience
+              </p>
+            </div>
+          </div>
+          <Separator style={{ background: "var(--glass-border)" }} />
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
             <div className="flex flex-col gap-0.5">
               <span
                 className="text-sm font-medium"
@@ -399,8 +384,6 @@ export default function SettingsPage() {
                 {theme === "dark" ? "Dark mode is on" : "Light mode is on"}
               </span>
             </div>
-
-            {/* Theme toggle */}
             <div
               className="flex gap-1 p-1 rounded-xl"
               style={{ background: "var(--muted)" }}
@@ -418,8 +401,7 @@ export default function SettingsPage() {
                     : { color: "var(--muted-foreground)" }
                 }
               >
-                <Sun size={13} />
-                Light
+                <Sun size={13} /> Light
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -434,12 +416,11 @@ export default function SettingsPage() {
                     : { color: "var(--muted-foreground)" }
                 }
               >
-                <Moon size={13} />
-                Dark
+                <Moon size={13} /> Dark
               </motion.button>
             </div>
           </div>
-        </Section>
+        </GlassCard>
       </motion.div>
 
       {/* Account info */}
@@ -450,7 +431,7 @@ export default function SettingsPage() {
       >
         <GlassCard padding="md">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 min-w-0">
               <span
                 className="text-xs font-semibold uppercase tracking-widest"
                 style={{ color: "var(--muted-foreground)" }}
@@ -458,20 +439,20 @@ export default function SettingsPage() {
                 Account
               </span>
               <span
-                className="text-sm font-medium"
+                className="text-sm font-medium truncate"
                 style={{ color: "var(--foreground)" }}
               >
                 {user?.name}
               </span>
               <span
-                className="text-xs"
+                className="text-xs truncate"
                 style={{ color: "var(--muted-foreground)" }}
               >
                 {user?.email}
               </span>
             </div>
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
+              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
               style={{
                 background: "var(--primary)",
                 color: "var(--primary-foreground)",
