@@ -27,7 +27,7 @@ import {
 import type { CreateFitnessLogPayload } from "@/types";
 import toast from "react-hot-toast";
 
-// ─── Chart view type ──────────────────────────────────────────────────────────
+// ─── Chart tab type ───────────────────────────────────────────────────────────
 type ChartTab = "weight" | "calories" | "steps";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -50,13 +50,11 @@ export default function FitnessPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [chartTab, setChartTab] = useState<ChartTab>("weight");
 
-  // ─── Queries ────────────────────────────────────────────────────────────────
   const { data: logs = [], isLoading: logsLoading } = useFitnessLogs();
   const { data: stats, isLoading: statsLoading } = useFitnessStats();
   const createLog = useCreateFitnessLog();
   const deleteLog = useDeleteFitnessLog();
 
-  // ─── Chart data ───────────────────────────────────────────────────────────
   const chartData = [...logs]
     .sort((a, b) => a.logDate.localeCompare(b.logDate))
     .map((l) => ({
@@ -66,7 +64,6 @@ export default function FitnessPage() {
       steps: l.steps,
     }));
 
-  // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleLog = (payload: CreateFitnessLogPayload) => {
     createLog.mutate(payload, {
       onSuccess: () => toast.success("Fitness log saved! 💪"),
@@ -82,48 +79,36 @@ export default function FitnessPage() {
   };
 
   const chartConfig = {
-    weight: {
-      key: "weight",
-      color: "#14B8A6",
-      label: "Weight (kg)",
-      type: "line" as const,
-    },
-    calories: {
-      key: "calories",
-      color: "#f59e0b",
-      label: "Calories",
-      type: "bar" as const,
-    },
-    steps: {
-      key: "steps",
-      color: "#06b6d4",
-      label: "Steps",
-      type: "bar" as const,
-    },
+    weight: { key: "weight", color: "#14B8A6", type: "line" as const },
+    calories: { key: "calories", color: "#f59e0b", type: "bar" as const },
+    steps: { key: "steps", color: "#06b6d4", type: "bar" as const },
   };
 
   const active = chartConfig[chartTab];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between flex-wrap gap-4"
+        className="flex items-center justify-between flex-wrap gap-3"
       >
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <Dumbbell size={20} style={{ color: "var(--primary)" }} />
+            <Dumbbell size={18} style={{ color: "var(--primary)" }} />
             <h1
-              className="text-2xl font-bold tracking-tight"
+              className="text-xl md:text-2xl font-bold tracking-tight"
               style={{ color: "var(--foreground)" }}
             >
               Fitness Tracker
             </h1>
           </div>
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+          <p
+            className="text-xs md:text-sm"
+            style={{ color: "var(--muted-foreground)" }}
+          >
             {logs.length} days logged — 139kg → 85kg journey
           </p>
         </div>
@@ -131,7 +116,7 @@ export default function FitnessPage() {
           onClick={() => setModalOpen(true)}
           shimmerColor="var(--accent)"
           background="var(--primary)"
-          className="h-10 px-5 text-sm font-semibold rounded-xl"
+          className="h-9 md:h-10 px-4 md:px-5 text-xs md:text-sm font-semibold rounded-xl"
         >
           + Log Today
         </ShimmerButton>
@@ -139,7 +124,7 @@ export default function FitnessPage() {
 
       {/* Stats */}
       {statsLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
@@ -192,7 +177,7 @@ export default function FitnessPage() {
                   key={tab}
                   onClick={() => setChartTab(tab)}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all duration-200"
+                  className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all duration-200"
                   style={
                     chartTab === tab
                       ? {
@@ -202,8 +187,8 @@ export default function FitnessPage() {
                       : { color: "var(--muted-foreground)" }
                   }
                 >
-                  <Icon size={12} />
-                  {tab}
+                  <Icon size={11} />
+                  <span className="hidden sm:block">{tab}</span>
                 </motion.button>
               );
             })}
@@ -216,7 +201,7 @@ export default function FitnessPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="h-52"
+          className="h-44 md:h-52"
         >
           <ResponsiveContainer width="100%" height="100%">
             {active.type === "line" ? (
@@ -227,12 +212,12 @@ export default function FitnessPage() {
                 />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                   domain={["auto", "auto"]}
@@ -263,12 +248,12 @@ export default function FitnessPage() {
                 />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -314,7 +299,7 @@ export default function FitnessPage() {
           <div className="flex flex-col gap-2">
             {/* Header row */}
             <div
-              className="grid grid-cols-5 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-widest"
+              className="grid grid-cols-3 md:grid-cols-5 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-widest"
               style={{
                 background: "var(--muted)",
                 color: "var(--muted-foreground)",
@@ -322,8 +307,8 @@ export default function FitnessPage() {
             >
               <span>Date</span>
               <span>Weight</span>
-              <span>Calories</span>
-              <span>Steps</span>
+              <span className="hidden md:block">Calories</span>
+              <span className="hidden md:block">Steps</span>
               <span>Notes</span>
             </div>
 
@@ -336,30 +321,39 @@ export default function FitnessPage() {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: i * 0.03 }}
-                  className="group grid grid-cols-5 px-4 py-3 rounded-xl text-sm items-center"
+                  className="group grid grid-cols-3 md:grid-cols-5 px-4 py-3 rounded-xl text-sm items-center"
                   style={{
                     background: "var(--muted)",
                     border: "1px solid var(--glass-border)",
                   }}
                 >
-                  <span style={{ color: "var(--muted-foreground)" }}>
+                  <span
+                    className="text-xs md:text-sm"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
                     {log.logDate}
                   </span>
                   <span
-                    className="font-semibold"
+                    className="font-semibold text-xs md:text-sm"
                     style={{ color: "var(--primary)" }}
                   >
-                    {log.weightKg} kg
+                    {log.weightKg}kg
                   </span>
-                  <span style={{ color: "var(--foreground)" }}>
+                  <span
+                    className="hidden md:block text-xs md:text-sm"
+                    style={{ color: "var(--foreground)" }}
+                  >
                     {log.calories} kcal
                   </span>
-                  <span style={{ color: "var(--foreground)" }}>
+                  <span
+                    className="hidden md:block text-xs md:text-sm"
+                    style={{ color: "var(--foreground)" }}
+                  >
                     {Number(log.steps).toLocaleString()}
                   </span>
                   <div className="flex items-center justify-between">
                     <span
-                      className="text-xs truncate max-w-20"
+                      className="text-xs truncate max-w-16 md:max-w-20"
                       style={{ color: "var(--muted-foreground)" }}
                     >
                       {log.notes || "—"}

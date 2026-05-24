@@ -45,7 +45,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         style={{ paddingTop: "var(--navbar-height)" }}
       >
         {/* Desktop — offset for floating sidebar */}
-        <div className="lg:pl-24 px-4 lg:px-8 pb-24 lg:pb-8 pt-6">
+        <div className="lg:pl-24 px-4 md:px-6 lg:px-8 pb-24 lg:pb-8 pt-4 md:pt-6">
           {children}
         </div>
       </motion.main>

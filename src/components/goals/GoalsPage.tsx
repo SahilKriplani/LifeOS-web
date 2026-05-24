@@ -166,7 +166,7 @@ function GoalCard({
         <ProgressRing
           value={percent}
           color={goal.color}
-          size={72}
+          size={64}
           strokeWidth={6}
           showPercent
         />
@@ -572,19 +572,22 @@ export default function GoalsPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between flex-wrap gap-4"
+        className="flex items-center justify-between flex-wrap gap-3"
       >
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <Target size={20} style={{ color: "var(--primary)" }} />
+            <Target size={18} style={{ color: "var(--primary)" }} />
             <h1
-              className="text-2xl font-bold tracking-tight"
+              className="text-xl md:text-2xl font-bold tracking-tight"
               style={{ color: "var(--foreground)" }}
             >
               Goals
             </h1>
           </div>
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+          <p
+            className="text-xs md:text-sm"
+            style={{ color: "var(--muted-foreground)" }}
+          >
             {goals.length} active goals — {overallPercent}% overall completion
           </p>
         </div>
@@ -592,33 +595,32 @@ export default function GoalsPage() {
           onClick={() => setModalOpen(true)}
           shimmerColor="var(--accent)"
           background="var(--primary)"
-          className="h-10 px-5 text-sm font-semibold rounded-xl"
+          className="h-9 md:h-10 px-4 md:px-5 text-xs md:text-sm font-semibold rounded-xl"
         >
-          <Plus size={15} className="mr-1" />
+          <Plus size={14} className="mr-1" />
           Add Goal
         </ShimmerButton>
       </motion.div>
 
-      {/* Overall progress */}
       {!isLoading && goals.length > 0 && (
         <GlassCard padding="md">
-          <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-4 md:gap-6 flex-wrap">
             <ProgressRing
               value={overallPercent}
               color="var(--primary)"
-              size={100}
-              strokeWidth={8}
+              size={80}
+              strokeWidth={7}
               label="Overall"
               showPercent
             />
-            <div className="flex flex-col gap-3 flex-1">
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
               <p
                 className="text-sm font-semibold"
                 style={{ color: "var(--foreground)" }}
               >
                 Overall Goal Completion
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {(Object.keys(categoryConfig) as Goal["category"][]).map(
                   (cat) => {
                     const catGoals = goals.filter((g) => g.category === cat);
@@ -636,7 +638,7 @@ export default function GoalsPage() {
                     return (
                       <div
                         key={cat}
-                        className="flex flex-col gap-1 px-3 py-2 rounded-lg"
+                        className="flex flex-col gap-0.5 px-3 py-2 rounded-lg"
                         style={{ background: "var(--muted)" }}
                       >
                         <span
@@ -646,7 +648,7 @@ export default function GoalsPage() {
                           {cat}
                         </span>
                         <span
-                          className="text-lg font-bold"
+                          className="text-base md:text-lg font-bold"
                           style={{ color: "var(--foreground)" }}
                         >
                           {catPercent}%
@@ -698,7 +700,7 @@ export default function GoalsPage() {
       ) : (
         <motion.div
           layout
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5"
         >
           <AnimatePresence>
             {filtered.map((goal) => (

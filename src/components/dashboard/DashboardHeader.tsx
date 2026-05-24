@@ -4,13 +4,11 @@ import { motion } from "framer-motion";
 import { getGreeting, formatDate } from "@/lib/utils";
 import { Flame } from "lucide-react";
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 interface DashboardHeaderProps {
   name: string;
   streak: number;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 export default function DashboardHeader({
   name,
   streak,
@@ -23,32 +21,31 @@ export default function DashboardHeader({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex items-start justify-between flex-wrap gap-4"
+      className="flex items-start justify-between flex-wrap gap-3"
     >
-      {/* ── Left — Greeting ── */}
-      <div className="flex flex-col gap-1">
+      {/* Left */}
+      <div className="flex flex-col gap-0.5">
         <motion.h1
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="text-2xl font-bold tracking-tight"
+          className="text-xl md:text-2xl font-bold tracking-tight"
           style={{ color: "var(--foreground)" }}
         >
-          {greeting}, {name} 👋
+          {greeting}, {name.split(" ")[0]} 👋
         </motion.h1>
-
         <motion.p
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="text-sm"
+          className="text-xs md:text-sm"
           style={{ color: "var(--muted-foreground)" }}
         >
           {today}
         </motion.p>
       </div>
 
-      {/* ── Right — Streak badge ── */}
+      {/* Streak badge */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -58,7 +55,7 @@ export default function DashboardHeader({
           type: "spring",
           stiffness: 200,
         }}
-        className="flex items-center gap-2 px-4 py-2 rounded-full"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full"
         style={{
           background: "var(--muted)",
           border: "1px solid var(--glass-border)",
@@ -68,10 +65,10 @@ export default function DashboardHeader({
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Flame size={16} className="text-orange-400" />
+          <Flame size={14} className="text-orange-400" />
         </motion.div>
         <span
-          className="text-sm font-semibold"
+          className="text-xs md:text-sm font-semibold"
           style={{ color: "var(--foreground)" }}
         >
           {streak} day streak
