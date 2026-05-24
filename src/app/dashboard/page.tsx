@@ -18,27 +18,24 @@ export default function DashboardPage() {
   const user = useUserStore((state) => state.user);
   const today = getTodayISO();
 
-  // ─── Queries ────────────────────────────────────────────────────────────────
   const { data: dsaStats } = useDSAStats();
   const { data: fitnessStats } = useFitnessStats();
   const { data: streak } = useStreak();
   const { data: tasks = [] } = useTasks(today);
   const checkin = useCheckin();
 
-  // ─── Auto checkin on dashboard load ─────────────────────────────────────────
   useEffect(() => {
     checkin.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Derived values ──────────────────────────────────────────────────────────
   const completedTasks = tasks.filter((t) => t.isDone).length;
   const totalTasks = tasks.length;
   const dailyCompletion =
     totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       {/* Header */}
       <DashboardHeader
         name={user?.name ?? "Sahil"}
@@ -57,7 +54,7 @@ export default function DashboardPage() {
       <ChartsSection />
 
       {/* Bottom section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         <PlannerWidget />
         <StreakCalendar
           currentStreak={streak?.currentStreak ?? 0}

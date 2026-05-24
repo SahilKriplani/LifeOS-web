@@ -1,9 +1,9 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
+import { Trash2, Code2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { DSALog } from "@/types";
-import { AnimatePresence, motion } from "framer-motion";
-import { Code2, Trash2 } from "lucide-react";
 
 // ─── Difficulty colors ────────────────────────────────────────────────────────
 const difficultyConfig = {
@@ -72,7 +72,7 @@ export default function DSALogList({ logs, onDelete }: DSALogListProps) {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2, delay: i * 0.03 }}
               whileHover={{ scale: 1.005 }}
-              className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200"
+              className="group flex items-center gap-2 md:gap-4 px-3 md:px-4 py-3 rounded-xl transition-all duration-200"
               style={{
                 background: "var(--muted)",
                 border: "1px solid var(--glass-border)",
@@ -86,23 +86,23 @@ export default function DSALogList({ logs, onDelete }: DSALogListProps) {
 
               {/* Problem name */}
               <span
-                className="flex-1 text-sm font-medium"
+                className="flex-1 text-xs md:text-sm font-medium truncate"
                 style={{ color: "var(--foreground)" }}
               >
                 {log.problemName}
               </span>
 
-              {/* Topic */}
+              {/* Topic — hidden on mobile */}
               <span
-                className="text-xs hidden md:block"
+                className="text-xs hidden lg:block shrink-0"
                 style={{ color: "var(--muted-foreground)" }}
               >
                 {log.topic}
               </span>
 
-              {/* Platform badge */}
+              {/* Platform badge — hidden on small screens */}
               <Badge
-                className="text-xs font-medium capitalize border-0 hidden sm:flex"
+                className="text-xs font-medium capitalize border-0 hidden md:flex shrink-0"
                 style={{
                   background: `${platformConfig[log.platform]}18`,
                   color: platformConfig[log.platform],
@@ -113,7 +113,7 @@ export default function DSALogList({ logs, onDelete }: DSALogListProps) {
 
               {/* Difficulty badge */}
               <Badge
-                className="text-xs font-medium capitalize border-0"
+                className="text-xs font-medium capitalize border-0 shrink-0"
                 style={{
                   background: diff.bg,
                   color: diff.color,
@@ -122,9 +122,9 @@ export default function DSALogList({ logs, onDelete }: DSALogListProps) {
                 {log.difficulty}
               </Badge>
 
-              {/* Date */}
+              {/* Date — hidden on mobile */}
               <span
-                className="text-xs hidden lg:block shrink-0"
+                className="text-xs hidden xl:block shrink-0"
                 style={{ color: "var(--muted-foreground)" }}
               >
                 {log.solvedAt}
