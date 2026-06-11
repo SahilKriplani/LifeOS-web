@@ -1,24 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "next-themes";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  Sun,
-  Moon,
-  LayoutDashboard,
-  CalendarDays,
-  Code2,
-  Dumbbell,
-  Target,
-  Bell,
-  Settings,
-  LogOut,
-  ChevronDown,
-  Menu,
-  X,
-} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,11 +8,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { logout } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import useUserStore from "@/store/useUserStore";
-import { useState, useEffect } from "react";
-import { logout } from "@/lib/auth";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Bell,
+  CalendarDays,
+  ChevronDown,
+  Code2,
+  Dumbbell,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Target,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { AnimatedThemeToggler } from "../ui/animated-theme-toggler";
 
 // ─── Nav links ────────────────────────────────────────────────────────────────
 const navLinks = [
@@ -46,16 +44,9 @@ const navLinks = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
   const user = useUserStore((state) => state.user);
-  const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -139,26 +130,17 @@ export default function Navbar() {
           {/* ── Right Side ── */}
           <div className="flex items-center gap-2">
             {/* Theme toggle */}
-            <motion.button
+            <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200"
               style={{
                 background: "var(--muted)",
                 color: "var(--muted-foreground)",
               }}
             >
-              {mounted ? (
-                theme === "dark" ? (
-                  <Sun size={15} />
-                ) : (
-                  <Moon size={15} />
-                )
-              ) : (
-                <Sun size={15} />
-              )}
-            </motion.button>
+              <AnimatedThemeToggler />
+            </motion.div>
 
             {/* Notifications — hidden on small mobile */}
             <motion.button
