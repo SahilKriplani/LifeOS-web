@@ -1,17 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
 
 interface DashboardShellProps {
   children: React.ReactNode;
 }
 
 export default function DashboardShell({ children }: DashboardShellProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
   return (
     <div className="min-h-screen" style={{ background: "var(--background)" }}>
       {/* Background gradient blobs */}
@@ -33,19 +29,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       {/* Navbar */}
       <Navbar />
 
-      {/* Sidebar */}
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
-
       {/* Main content */}
       <motion.main
         className="relative z-10 min-h-screen"
         style={{ paddingTop: "var(--navbar-height)" }}
       >
-        {/* Desktop — offset for floating sidebar */}
-        <div className="lg:pl-24 px-4 md:px-6 lg:px-8 pb-24 lg:pb-8 pt-4 md:pt-6">
+        <div className="mx-auto max-w-screen-2xl px-4 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6">
           {children}
         </div>
       </motion.main>

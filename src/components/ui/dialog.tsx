@@ -37,46 +37,47 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 w-full max-w-lg",
-        "translate-x-[-50%] translate-y-[-50%]",
-        "duration-200",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out",
-        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
-        "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
-        "rounded-2xl",
-        className,
-      )}
-      style={{
-        background: "var(--glass-bg)",
-        backdropFilter: "blur(32px) saturate(200%)",
-        WebkitBackdropFilter: "blur(32px) saturate(200%)",
-        border: "1px solid var(--glass-border)",
-        boxShadow: `
-          0 0 0 1px var(--glass-border),
-          0 24px 64px rgba(20,184,166,0.18),
-          0 8px 24px rgba(0,0,0,0.35)
-        `,
-      }}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close
-        className="absolute right-4 top-4 rounded-lg opacity-70 transition-all hover:opacity-100 focus:outline-none disabled:pointer-events-none"
+    {/* Flex wrapper centers the dialog reliably — no transform-based centering,
+        so the enter/exit scale animation can't fight the positioning. */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "pointer-events-auto relative flex flex-col w-full max-w-lg",
+          "max-h-[calc(100dvh-2rem)] rounded-2xl",
+          "duration-200",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          className,
+        )}
         style={{
-          background: "var(--muted)",
-          padding: "4px",
-          color: "var(--muted-foreground)",
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(32px) saturate(200%)",
+          WebkitBackdropFilter: "blur(32px) saturate(200%)",
+          border: "1px solid var(--glass-border)",
+          boxShadow: `
+            0 0 0 1px var(--glass-border),
+            0 24px 64px rgba(20,184,166,0.18),
+            0 8px 24px rgba(0,0,0,0.35)
+          `,
         }}
+        {...props}
       >
-        <X size={14} />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
+        {children}
+        <DialogPrimitive.Close
+          className="absolute right-4 top-4 z-20 rounded-lg opacity-70 transition-all hover:opacity-100 focus:outline-none disabled:pointer-events-none"
+          style={{
+            background: "var(--muted)",
+            padding: "4px",
+            color: "var(--muted-foreground)",
+          }}
+        >
+          <X size={14} />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </div>
   </DialogPortal>
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;

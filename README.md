@@ -66,7 +66,7 @@ LifeOS Frontend is the client-side of the LifeOS personal operating system. It c
 
 ```css
 .glass        /* blur(12px) + saturate — standard cards */
-.glass-strong /* blur(24px) + saturate(180%) — navbar, sidebar */
+.glass-strong /* blur(24px) + saturate(180%) — navbar, dialogs */
 ```
 
 ---
@@ -76,7 +76,7 @@ LifeOS Frontend is the client-side of the LifeOS personal operating system. It c
 ```
 Browser (Next.js 16 — App Router)
          │
-         │  REST API (JSON, httpOnly cookies)
+         │  REST API (JSON, JWT Bearer header)
          ▼
    LifeOS Backend (FastAPI)
          │
@@ -88,7 +88,8 @@ Browser (Next.js 16 — App Router)
 - **App Router** — file-based routing, layouts, server components where applicable
 - **TanStack Query** — all server state with automatic caching and error boundaries
 - **Zustand** — lightweight client state, zero boilerplate, fine-grained selectors
-- **httpOnly Cookies** — auth tokens never exposed to JavaScript
+- **JWT Bearer auth** — token persisted in a readable cookie (so the edge `proxy.ts` guard can see it) and sent as an `Authorization: Bearer` header on every request, avoiding fragile cross-site cookies between Vercel and Railway
+- **Single dock navbar** — no sidebar; one glass navbar with an Apple-style magnifying dock keeps the UI minimal and removes nav duplication
 - **Feature-based structure** — each module is self-contained
 - **shadcn/ui** — Radix-based accessible components, styled with CSS variables
 
@@ -118,9 +119,8 @@ frontend/
     │
     ├── components/
     │   ├── layout/
-    │   │   ├── Navbar.tsx        # Sticky glass navbar + user dropdown
-    │   │   ├── Sidebar.tsx       # Collapsible animated sidebar
-    │   │   └── DashboardShell.tsx # Layout wrapper (navbar + sidebar + main)
+    │   │   ├── Navbar.tsx        # Glass navbar w/ Apple-style magnifying dock + user dropdown
+    │   │   └── DashboardShell.tsx # Layout wrapper (navbar + main)
     │   ├── dashboard/
     │   │   └── DashboardHeader.tsx # Greeting + date + streak badge
     │   ├── landing/
@@ -147,8 +147,8 @@ frontend/
     │       └── dropdown-menu.tsx
     │
     ├── lib/
-    │   ├── api.ts                # Axios instance + interceptors (sanitizes passwords in logs)
-    │   ├── auth.ts               # logout() helper
+    │   ├── api.ts                # Axios instance + interceptors (attaches Bearer token, sanitizes passwords in logs)
+    │   ├── auth.ts               # setToken()/getToken()/clearToken() cookie helpers + logout()
     │   └── utils.ts              # cn(), formatDate(), getGreeting(), getTodayISO(), etc.
     │
     ├── hooks/                    # usePlanner, useDSA, useStreak (coming)
@@ -161,7 +161,7 @@ frontend/
     ├── types/
     │   └── index.ts              # All shared TypeScript interfaces
     │
-    └── middleware.ts             # Route protection (redirects /dashboard → /login if no cookie)
+    └── proxy.ts                  # Next.js 16 edge middleware — route protection (redirects /dashboard → /login if no token cookie)
 ```
 
 ---
@@ -216,7 +216,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
   (Axios → FastAPI backend)
        │
        ▼
-  httpOnly cookie set by backend
+  JWT returned in response body
+       │
+       ▼
+  setToken() → readable cookie (not httpOnly)
+  Axios attaches it as Authorization: Bearer on every request
        │
        ▼
   Zustand useUserStore.setUser()
@@ -225,9 +229,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
   router.push("/dashboard")
 ```
 
-**Route protection via `middleware.ts`:**
-- `/dashboard/*` without cookie → redirect to `/login`
-- `/login` or `/register` with cookie → redirect to `/dashboard`
+**Route protection via `proxy.ts` (Next.js 16 edge middleware):**
+- `/dashboard/*` without token cookie → redirect to `/login`
+- `/login` or `/register` with token cookie → redirect to `/dashboard`
 
 ---
 
@@ -265,7 +269,7 @@ npx tsc --noEmit     # TypeScript type check
 
 ## 🗺️ Roadmap
 
-- [x] Phase 1 — Project setup, folder structure, base layout (Navbar + Sidebar + Shell)
+- [x] Phase 1 — Project setup, folder structure, base layout (dock Navbar + Shell)
 - [x] Phase 2 — Landing page (Hero + Features + Stats + Footer)
 - [x] Phase 3 — Auth pages (Login + Register + middleware)
 - [x] Phase 3.5 — Backend connected (FastAPI + MySQL)
@@ -285,7 +289,7 @@ npx tsc --noEmit     # TypeScript type check
 - **MVP first** — build the simplest thing that works, then iterate
 - **Modular** — each feature is self-contained and independently removable
 - **Type-safe** — TypeScript everywhere, shared interfaces in `types/index.ts`
-- **Secure** — no sensitive data in localStorage, httpOnly cookie auth, passwords sanitized from logs
+- **Secure** — no sensitive data in localStorage, JWT Bearer auth, passwords sanitized from logs
 - **Performance** — TanStack Query caching, Zustand selectors, no unnecessary re-renders
 
 ---

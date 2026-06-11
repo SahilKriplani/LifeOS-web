@@ -113,7 +113,7 @@ export default function AddTaskModal({
           colorTo="var(--accent)"
         />
 
-        <div className="p-6 flex flex-col gap-6">
+        <div className="p-6 flex flex-col gap-6 overflow-y-auto min-h-0">
           {/* Header */}
           <DialogHeader>
             <DialogTitle
