@@ -8,12 +8,12 @@ import * as yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { setToken, clearToken } from "@/lib/auth";
 import useUserStore from "@/store/useUserStore";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
@@ -53,20 +53,14 @@ export default function LoginForm() {
         throw new Error("Token missing from backend response");
       }
 
-      Cookies.set("access_token", res.data.token, {
-        expires: 7,
-        path: "/",
-        secure: true,
-        sameSite: "lax",
-      });
-
+      setToken(res.data.token);
       setUser(res.data.user);
 
       toast.success("Welcome back!");
 
       router.replace("/dashboard");
     } catch (err: unknown) {
-      Cookies.remove("access_token");
+      clearToken();
 
       const error = err as {
         response?: {

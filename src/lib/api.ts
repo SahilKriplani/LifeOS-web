@@ -3,11 +3,11 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import Cookies from "js-cookie";
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1",
-  withCredentials: true, // sends httpOnly cookies automatically
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,11 +15,13 @@ const api = axios.create({
 });
 
 // ─── Request interceptor ──────────────────────────────────────────────────────
-// Runs before every request goes out
+// Attach the bearer token (stored in a readable cookie) on every request.
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // You can attach tokens here later if needed
-    // For now we rely on httpOnly cookies (withCredentials: true)
+    const token = Cookies.get("access_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error: AxiosError) => {
