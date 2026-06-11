@@ -11,7 +11,14 @@ import {
 import { logout } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import useUserStore from "@/store/useUserStore";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import {
   Bell,
   CalendarDays,
@@ -27,7 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { AnimatedThemeToggler } from "../ui/animated-theme-toggler";
 
@@ -40,6 +47,99 @@ const navLinks = [
   { label: "Goals", href: "/dashboard/goals", icon: Target },
 ];
 
+// ─── Dock icon (Apple-style magnification) ──────────────────────────────────────
+function DockIcon({
+  mouseX,
+  label,
+  href,
+  icon: Icon,
+  isActive,
+}: {
+  mouseX: MotionValue<number>;
+  label: string;
+  href: string;
+  icon: React.ElementType;
+  isActive: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  // Horizontal distance from the cursor to this icon's center.
+  const distance = useTransform(mouseX, (val) => {
+    const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
+    return val - bounds.x - bounds.width / 2;
+  });
+
+  const spring = { mass: 0.1, stiffness: 170, damping: 14 };
+  const sizeSync = useTransform(distance, [-110, 0, 110], [38, 56, 38]);
+  const size = useSpring(sizeSync, spring);
+  const iconScaleSync = useTransform(distance, [-110, 0, 110], [1, 1.45, 1]);
+  const iconScale = useSpring(iconScaleSync, spring);
+
+  return (
+    <Link href={href} aria-label={label}>
+      <motion.div
+        ref={ref}
+        style={{ width: size, height: size }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="relative flex items-center justify-center rounded-xl transition-colors duration-200"
+        title={label}
+      >
+        {/* Active background */}
+        {isActive && (
+          <motion.div
+            layoutId="dockActive"
+            className="absolute inset-0 rounded-xl"
+            style={{
+              background: "var(--primary)",
+              boxShadow:
+                "0 4px 18px color-mix(in srgb, var(--primary) 45%, transparent)",
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+          />
+        )}
+        <motion.span
+          style={{ scale: iconScale }}
+          className="relative z-10 flex items-center justify-center"
+        >
+          <Icon
+            size={18}
+            style={{
+              color: isActive
+                ? "var(--primary-foreground)"
+                : "var(--muted-foreground)",
+            }}
+          />
+        </motion.span>
+
+        {/* Hover label — below the icon since the navbar sits at the top */}
+        <AnimatePresence>
+          {hovered && (
+            <motion.span
+              initial={{ opacity: 0, y: -4, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.9 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-full mt-2 whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium"
+              style={{
+                background: "var(--glass-bg)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                border: "1px solid var(--glass-border)",
+                color: "var(--foreground)",
+                boxShadow: "var(--glass-shadow)",
+              }}
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </Link>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function Navbar() {
   const pathname = usePathname();
@@ -47,6 +147,7 @@ export default function Navbar() {
   const user = useUserStore((state) => state.user);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const mouseX = useMotionValue(Infinity);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -97,32 +198,26 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* ── Nav Links — desktop only ── */}
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* ── Magnifying dock — desktop only ── */}
+          <nav
+            onMouseMove={(e) => mouseX.set(e.clientX)}
+            onMouseLeave={() => mouseX.set(Infinity)}
+            className="hidden lg:flex items-center gap-2 px-2"
+          >
             {navLinks.map(({ label, href, icon: Icon }) => {
               const isActive =
                 href === "/dashboard"
                   ? pathname === "/dashboard"
                   : pathname.startsWith(href);
               return (
-                <Link key={href} href={href}>
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200"
-                    style={
-                      isActive
-                        ? {
-                            background: "var(--primary)",
-                            color: "var(--primary-foreground)",
-                          }
-                        : { color: "var(--muted-foreground)" }
-                    }
-                  >
-                    <Icon size={14} />
-                    {label}
-                  </motion.div>
-                </Link>
+                <DockIcon
+                  key={href}
+                  mouseX={mouseX}
+                  label={label}
+                  href={href}
+                  icon={Icon}
+                  isActive={isActive}
+                />
               );
             })}
           </nav>
