@@ -154,3 +154,55 @@ body {
     background-position: 0% 0%;
     }
   }}
+
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+/* ── Unified Dialog Style ────────────────────────────────────────── */
+[role="dialog"] {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(32px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow:
+    0 0 0 1px var(--glass-border),
+    0 20px 60px rgba(20, 184, 166, 0.15),
+    0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Unified Select/Dropdown Content ─────────────────────────────── */
+[data-radix-popper-content-wrapper] > div,
+[data-radix-select-content],
+[data-radix-dropdown-menu-content] {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow:
+    0 0 0 1px var(--glass-border),
+    0 16px 40px rgba(20, 184, 166, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 12px !important;
+}
+
+/* ── Select/Dropdown items hover ─────────────────────────────────── */
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted],
+[data-radix-dropdown-menu-item]:hover,
+[data-radix-dropdown-menu-item][data-highlighted] {
+  background: rgba(20, 184, 166, 0.12) !important;
+  color: var(--primary) !important;
+  outline: none !important;
+}
+
+[data-radix-select-item][data-state="checked"] {
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ── Dialog overlay ──────────────────────────────────────────────── */
+[data-radix-dialog-overlay] {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+}

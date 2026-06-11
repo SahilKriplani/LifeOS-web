@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { setToken } from "@/lib/auth";
 import useUserStore from "@/store/useUserStore";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
@@ -56,6 +57,12 @@ export default function RegisterForm() {
         email: data.email,
         password: data.password,
       });
+
+      if (!res.data?.token || res.data.token === "undefined") {
+        throw new Error("Token missing from backend response");
+      }
+
+      setToken(res.data.token);
       setUser(res.data.user);
       toast.success("Account created! Welcome to LifeOS 🎉");
       router.replace("/dashboard");
