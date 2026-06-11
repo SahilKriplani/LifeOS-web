@@ -95,7 +95,7 @@ export default function FitnessLogModal({
           colorFrom="var(--primary)"
           colorTo="#8b5cf6"
         />
-        <div className="p-6 flex flex-col gap-6">
+        <div className="p-6 flex flex-col gap-6 overflow-y-auto min-h-0">
           <DialogHeader>
             <DialogTitle
               className="text-lg font-bold"
