@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +36,6 @@ type FormData = yup.InferType<typeof schema>;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function RegisterForm() {
-  const router = useRouter();
   const setUser = useUserStore((state) => state.setUser);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -65,7 +63,9 @@ export default function RegisterForm() {
       setToken(res.data.token);
       setUser(res.data.user);
       toast.success("Account created! Welcome to LifeOS 🎉");
-      router.replace("/dashboard");
+      // Hard navigation so the edge middleware re-runs with the fresh cookie
+      // (a soft router.replace would hit the cached "no token → /login" redirect).
+      window.location.assign("/dashboard");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
       toast.error(

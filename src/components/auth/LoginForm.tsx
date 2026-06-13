@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,6 @@ type FormData = yup.InferType<typeof schema>;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function LoginForm() {
-  const router = useRouter();
   const setUser = useUserStore((state) => state.setUser);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -58,7 +56,11 @@ export default function LoginForm() {
 
       toast.success("Welcome back!");
 
-      router.replace("/dashboard");
+      // Hard navigation: forces the edge middleware (proxy.ts) to re-run with the
+      // freshly-set cookie. A soft router.replace would resolve to the prefetched
+      // "no token → /login" redirect cached while we were on the login page,
+      // which is why the dashboard previously needed a manual refresh.
+      window.location.assign("/dashboard");
     } catch (err: unknown) {
       clearToken();
 
