@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import api from "@/lib/api";
 import { setToken } from "@/lib/auth";
 import useUserStore from "@/store/useUserStore";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 const schema = yup.object({
@@ -236,6 +237,10 @@ export default function RegisterForm() {
           )}
         </Button>
       </form>
+
+      <div className="mt-6">
+        <GoogleSignInButton />
+      </div>
 
       {/* Footer */}
       <p

@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import FitnessStatsRow from "@/components/fitness/FitnessStatsRow";
 import FitnessLogModal from "@/components/fitness/FitnessLogModal";
+import WorkoutSection from "@/components/fitness/WorkoutSection";
 import GlassCard from "@/components/shared/GlassCard";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Dumbbell, Scale, Flame, Footprints, Trash2 } from "lucide-react";
@@ -276,6 +277,9 @@ export default function FitnessPage() {
           </ResponsiveContainer>
         </motion.div>
       </GlassCard>
+
+      {/* Workout logging (Liftoff-style) */}
+      <WorkoutSection />
 
       {/* Log table */}
       <GlassCard padding="md" className="flex flex-col gap-4">

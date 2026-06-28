@@ -67,6 +67,84 @@ export interface FitnessStats {
 
 export type CreateFitnessLogPayload = Omit<FitnessLog, "id" | "userId">;
 
+// ─── Workout logging (Liftoff-style) ───────────────────────────────────────────
+export type MuscleGroup =
+  | "chest"
+  | "back"
+  | "shoulders"
+  | "biceps"
+  | "triceps"
+  | "quads"
+  | "hamstrings"
+  | "glutes"
+  | "calves"
+  | "core"
+  | "forearms"
+  | "cardio";
+
+export const MUSCLE_GROUPS: MuscleGroup[] = [
+  "chest",
+  "back",
+  "shoulders",
+  "biceps",
+  "triceps",
+  "quads",
+  "hamstrings",
+  "glutes",
+  "calves",
+  "core",
+  "forearms",
+  "cardio",
+];
+
+export type WeightUnit = "kg" | "lb";
+
+export interface Exercise {
+  id: number;
+  name: string;
+  muscleGroup: MuscleGroup;
+  isCustom: boolean;
+  userId: number | null; // null = global seed
+}
+
+export interface CreateExercisePayload {
+  name: string;
+  muscleGroup: MuscleGroup;
+}
+
+// A single set within a session (weight is always stored/sent in kg).
+export interface WorkoutSet {
+  setNumber: number;
+  weightKg: number | null;
+  reps: number;
+}
+
+// One exercise inside a session, with its sets grouped together.
+export interface WorkoutExercise {
+  exerciseId: number;
+  exerciseName: string;
+  muscleGroup: MuscleGroup;
+  sets: WorkoutSet[];
+}
+
+export interface WorkoutSession {
+  id: number;
+  userId: number;
+  logDate: string; // "YYYY-MM-DD"
+  notes: string | null;
+  exercises: WorkoutExercise[];
+}
+
+// Payload the modal builds and posts (weights already converted to kg).
+export interface CreateWorkoutPayload {
+  logDate: string;
+  notes?: string | null;
+  entries: {
+    exerciseId: number;
+    sets: { weightKg: number | null; reps: number }[];
+  }[];
+}
+
 // ─── Streak ───────────────────────────────────────────────────────────────────
 export interface Streak {
   userId: number;
