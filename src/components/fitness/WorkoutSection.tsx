@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import GlassCard from "@/components/shared/GlassCard";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
-import WorkoutLogModal from "@/components/fitness/WorkoutLogModal";
 import { Dumbbell, Trash2 } from "lucide-react";
 import { useWorkouts, useDeleteWorkout } from "@/hooks/useWorkouts";
 import { useWeightUnit } from "@/hooks/useWeightUnit";
@@ -27,7 +24,6 @@ function SetSummary({ sets, unit }: { sets: WorkoutSet[]; unit: WeightUnit }) {
 }
 
 export default function WorkoutSection() {
-  const [modalOpen, setModalOpen] = useState(false);
   const [unit, setUnit] = useWeightUnit();
 
   const { data: sessions = [], isLoading } = useWorkouts();
@@ -54,40 +50,29 @@ export default function WorkoutSection() {
           </h3>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Display unit toggle */}
-          <div
-            className="flex gap-1 p-1 rounded-xl"
-            style={{ background: "var(--muted)" }}
-          >
-            {(["kg", "lb"] as WeightUnit[]).map((u) => (
-              <button
-                key={u}
-                type="button"
-                onClick={() => setUnit(u)}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase transition-all"
-                style={
-                  unit === u
-                    ? {
-                        background: "var(--primary)",
-                        color: "var(--primary-foreground)",
-                      }
-                    : { color: "var(--muted-foreground)" }
-                }
-              >
-                {u}
-              </button>
-            ))}
-          </div>
-
-          <ShimmerButton
-            onClick={() => setModalOpen(true)}
-            shimmerColor="var(--accent)"
-            background="var(--primary)"
-            className="h-9 px-4 text-xs font-semibold rounded-xl"
-          >
-            + Log Workout
-          </ShimmerButton>
+        {/* Display unit toggle */}
+        <div
+          className="flex gap-1 p-1 rounded-xl"
+          style={{ background: "var(--muted)" }}
+        >
+          {(["kg", "lb"] as WeightUnit[]).map((u) => (
+            <button
+              key={u}
+              type="button"
+              onClick={() => setUnit(u)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase transition-all"
+              style={
+                unit === u
+                  ? {
+                      background: "var(--primary)",
+                      color: "var(--primary-foreground)",
+                    }
+                  : { color: "var(--muted-foreground)" }
+              }
+            >
+              {u}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -170,8 +155,6 @@ export default function WorkoutSection() {
           ))}
         </div>
       )}
-
-      <WorkoutLogModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </GlassCard>
   );
 }

@@ -59,7 +59,8 @@ export interface FitnessLog {
 
 export interface FitnessStats {
   currentWeight: number;
-  targetWeight: number;
+  startWeight: number | null; // earliest logged weight (goal baseline)
+  targetWeight: number | null; // user's goal weight, null until set
   weightLost: number;
   averageCalories: number;
   averageSteps: number;
@@ -151,7 +152,7 @@ export interface Streak {
   currentStreak: number;
   bestStreak: number;
   lastActiveDate: string; // "YYYY-MM-DD"
-  weeklyMap: Record<string, boolean>; // { "2025-01-01": true, ... }
+  activeDates: string[]; // recent active days, e.g. ["2026-06-28", ...]
 }
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────

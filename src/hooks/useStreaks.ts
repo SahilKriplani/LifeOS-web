@@ -11,7 +11,7 @@ const fetchStreak = async (): Promise<Streak> => {
     currentStreak: raw.current_streak,
     bestStreak: raw.best_streak,
     lastActiveDate: raw.last_active_date,
-    weeklyMap: {},
+    activeDates: raw.active_dates ?? [],
   };
 };
 

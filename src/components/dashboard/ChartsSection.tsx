@@ -83,13 +83,18 @@ export default function ChartsSection() {
     Math.round(((dsaStats?.total ?? 0) / 300) * 100),
     100,
   );
+  // Ring fills as the user moves from their starting weight toward their goal.
+  // Needs a real goal + a start strictly above it, otherwise there's nothing to
+  // measure progress against, so we render an empty ring rather than fake data.
   const fitnessPercent = (() => {
-    const current = Number(fitnessStats?.currentWeight ?? 139);
-    const target = 85;
-    const start = 139;
+    const start = fitnessStats?.startWeight ?? null;
+    const target = fitnessStats?.targetWeight ?? null;
+    const current = fitnessStats?.currentWeight ?? null;
+    if (start === null || target === null || current === null) return 0;
+    if (start <= target) return 0; // goal already met or misconfigured
     const lost = start - current;
-    const tolose = start - target;
-    return Math.min(Math.round((lost / tolose) * 100), 100);
+    const toLose = start - target;
+    return Math.max(0, Math.min(Math.round((lost / toLose) * 100), 100));
   })();
   const streakPercent = Math.min(
     Math.round(((streak?.currentStreak ?? 0) / 365) * 100),

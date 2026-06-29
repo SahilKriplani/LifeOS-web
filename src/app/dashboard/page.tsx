@@ -47,6 +47,7 @@ export default function DashboardPage() {
         dsaSolved={dsaStats?.total ?? 0}
         currentStreak={streak?.currentStreak ?? 0}
         currentWeight={Number(fitnessStats?.currentWeight ?? 0)}
+        targetWeight={fitnessStats?.targetWeight ?? null}
         dailyCompletion={dailyCompletion}
       />
 
@@ -59,6 +60,7 @@ export default function DashboardPage() {
         <StreakCalendar
           currentStreak={streak?.currentStreak ?? 0}
           bestStreak={streak?.bestStreak ?? 0}
+          activeDates={streak?.activeDates ?? []}
         />
       </div>
     </div>

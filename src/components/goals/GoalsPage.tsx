@@ -6,7 +6,6 @@ import { Target, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import GlassCard from "@/components/shared/GlassCard";
 import ProgressRing from "@/components/shared/ProgressRing";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
-import { BorderBeam } from "@/components/ui/border-beam";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +14,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BorderBeam } from "@/components/ui/border-beam";
 import {
   useGoals,
   useCreateGoal,
@@ -26,6 +27,7 @@ import {
   type CreateGoalPayload,
 } from "@/hooks/useGoals";
 import toast from "react-hot-toast";
+import { getTodayISO } from "@/lib/utils";
 
 // ─── Category config ──────────────────────────────────────────────────────────
 const categoryConfig = {
@@ -276,12 +278,6 @@ function AddGoalModal({
           overflowY: "auto",
         }}
       >
-        <BorderBeam
-          size={300}
-          duration={8}
-          colorFrom="var(--primary)"
-          colorTo="var(--accent)"
-        />
         <div className="p-6 flex flex-col gap-5">
           <DialogHeader>
             <DialogTitle
@@ -309,11 +305,6 @@ function AddGoalModal({
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="e.g. Solve 300 DSA Problems"
                 autoFocus
-                style={{
-                  background: "var(--muted)",
-                  border: "1px solid var(--glass-border)",
-                  color: "var(--foreground)",
-                }}
               />
             </div>
 
@@ -331,11 +322,6 @@ function AddGoalModal({
                   setForm({ ...form, description: e.target.value })
                 }
                 placeholder="Brief description of this goal"
-                style={{
-                  background: "var(--muted)",
-                  border: "1px solid var(--glass-border)",
-                  color: "var(--foreground)",
-                }}
               />
             </div>
 
@@ -349,15 +335,11 @@ function AddGoalModal({
                   Target *
                 </Label>
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={form.target}
                   onChange={(e) => setForm({ ...form, target: e.target.value })}
                   placeholder="300"
-                  style={{
-                    background: "var(--muted)",
-                    border: "1px solid var(--glass-border)",
-                    color: "var(--foreground)",
-                  }}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -368,17 +350,13 @@ function AddGoalModal({
                   Current
                 </Label>
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={form.current}
                   onChange={(e) =>
                     setForm({ ...form, current: e.target.value })
                   }
                   placeholder="0"
-                  style={{
-                    background: "var(--muted)",
-                    border: "1px solid var(--glass-border)",
-                    color: "var(--foreground)",
-                  }}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -392,11 +370,6 @@ function AddGoalModal({
                   value={form.unit}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
                   placeholder="problems"
-                  style={{
-                    background: "var(--muted)",
-                    border: "1px solid var(--glass-border)",
-                    color: "var(--foreground)",
-                  }}
                 />
               </div>
             </div>
@@ -444,15 +417,11 @@ function AddGoalModal({
               >
                 Deadline *
               </Label>
-              <Input
-                type="date"
+              <DatePicker
                 value={form.deadline}
-                onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-                style={{
-                  background: "var(--muted)",
-                  border: "1px solid var(--glass-border)",
-                  color: "var(--foreground)",
-                }}
+                onChange={(deadline) => setForm({ ...form, deadline })}
+                placeholder="Pick a deadline"
+                min={getTodayISO()}
               />
             </div>
 
