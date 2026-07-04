@@ -1,4 +1,5 @@
 import RegisterForm from "@/components/auth/RegisterForm";
+import { LogoMark } from "@/components/shared/Logo";
 
 export default function RegisterPage() {
   return (
@@ -20,15 +21,7 @@ export default function RegisterPage() {
 
       {/* Logo */}
       <div className="absolute top-6 left-6 flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
-          style={{
-            background: "var(--primary)",
-            color: "var(--primary-foreground)",
-          }}
-        >
-          L
-        </div>
+        <LogoMark size={32} />
         <span
           className="font-semibold text-base"
           style={{ color: "var(--foreground)" }}

@@ -17,8 +17,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LifeOS",
-  description: "Your personal life operating system",
+  title: {
+    default: "LifeOS — Your personal life operating system",
+    template: "%s · LifeOS",
+  },
+  description:
+    "Track goals, fitness, DSA practice, and daily plans in one focused dashboard. LifeOS is your personal life operating system.",
+  applicationName: "LifeOS",
+  openGraph: {
+    title: "LifeOS — Your personal life operating system",
+    description:
+      "Track goals, fitness, DSA practice, and daily plans in one focused dashboard.",
+    siteName: "LifeOS",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { LogoMark } from "@/components/shared/Logo";
 import useUserStore from "@/store/useUserStore";
 import {
   AnimatePresence,
@@ -181,15 +182,7 @@ export default function Navbar() {
         <div className="h-full max-w-screen-2xl mx-auto px-4 md:px-6 flex items-center justify-between">
           {/* ── Logo ── */}
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
-              style={{
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-              }}
-            >
-              L
-            </div>
+            <LogoMark size={32} />
             <span
               className="font-semibold text-base tracking-tight hidden sm:block"
               style={{ color: "var(--foreground)" }}

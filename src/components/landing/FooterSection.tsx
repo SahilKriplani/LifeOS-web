@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { CalendarDays, Code2, Dumbbell, Target, Mail, Phone } from "lucide-react";
 import { FaGithub, FaXTwitter, FaGlobe, FaEnvelope, FaLinkedinIn } from "react-icons/fa6";
 import Link from "next/link";
+import { LogoMark } from "@/components/shared/Logo";
 
 const PORTFOLIO_URL = "https://sahil-portfolio-gamma-three.vercel.app/";
 const TWITTER_URL = "https://x.com/kriplani_sahil7";
@@ -83,15 +84,7 @@ export default function FooterSection() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 w-fit">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
-                style={{
-                  background: "var(--primary)",
-                  color: "var(--primary-foreground)",
-                }}
-              >
-                L
-              </div>
+              <LogoMark size={32} />
               <span
                 className="font-semibold text-base tracking-tight"
                 style={{ color: "var(--foreground)" }}

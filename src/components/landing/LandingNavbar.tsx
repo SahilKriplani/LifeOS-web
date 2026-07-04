@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LogoMark } from "@/components/shared/Logo";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -53,15 +54,7 @@ export default function LandingNavbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
-            style={{
-              background: "var(--primary)",
-              color: "var(--primary-foreground)",
-            }}
-          >
-            L
-          </div>
+          <LogoMark size={32} />
           <span
             className="font-semibold text-base tracking-tight"
             style={{ color: "var(--foreground)" }}
