@@ -31,6 +31,7 @@ import {
   Menu,
   Settings,
   Target,
+  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -46,6 +47,7 @@ const navLinks = [
   { label: "DSA", href: "/dashboard/dsa", icon: Code2 },
   { label: "Fitness", href: "/dashboard/fitness", icon: Dumbbell },
   { label: "Goals", href: "/dashboard/goals", icon: Target },
+  { label: "Finance", href: "/dashboard/finance", icon: Wallet },
 ];
 
 // ─── Dock icon (Apple-style magnification) ──────────────────────────────────────

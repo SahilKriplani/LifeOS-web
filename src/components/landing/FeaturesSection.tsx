@@ -209,7 +209,6 @@ export default function FeaturesSection() {
             icon={Wallet}
             title="Finance & Budgeting"
             desc="Track income and spending, set category budgets, and watch where the money actually goes — manual, private, no bank linking."
-            soon
           >
             <div className="mt-auto flex flex-col gap-2.5">
               {[

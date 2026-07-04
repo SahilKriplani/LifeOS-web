@@ -170,8 +170,99 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
+// ─── Finance ─────────────────────────────────────────────────────────────────
+export type TransactionType = "income" | "expense";
+
+export interface Account {
+  id: number;
+  name: string;
+  openingBalance: number;
+  isDefault: boolean;
+  balance: number; // derived: opening + income − expense
+}
+
+export interface CreateAccountPayload {
+  name: string;
+  openingBalance: number;
+}
+
+export interface UpdateAccountPayload {
+  name?: string;
+  openingBalance?: number;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  type: TransactionType;
+  budget: number | null;
+  spent: number; // this calendar month (expense)
+  remaining: number | null; // budget − spent, or null when no budget
+}
+
+export interface CreateCategoryPayload {
+  name: string;
+  type: TransactionType;
+  budget?: number | null;
+}
+
+export interface UpdateCategoryPayload {
+  name?: string;
+  budget?: number | null; // null clears the budget
+}
+
+export interface Transaction {
+  id: number;
+  userId: number;
+  type: TransactionType;
+  amount: number;
+  accountId: number;
+  accountName: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  note: string | null;
+  date: string; // "YYYY-MM-DD"
+}
+
+export interface CreateTransactionPayload {
+  type: TransactionType;
+  amount: number;
+  accountId: number;
+  categoryId?: number | null;
+  note?: string | null;
+  date: string;
+}
+
+export interface UpdateTransactionPayload {
+  type?: TransactionType;
+  amount?: number;
+  accountId?: number;
+  categoryId?: number | null;
+  note?: string | null;
+  date?: string;
+}
+
+export interface FinanceDailyPoint {
+  date: string;
+  income: number;
+  expense: number;
+}
+
+export interface FinanceCategoryBreakdown {
+  category: string;
+  total: number;
+}
+
+export interface FinanceSummary {
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+  byCategory: FinanceCategoryBreakdown[];
+  daily: FinanceDailyPoint[];
+}
+
 // ─── Chart ───────────────────────────────────────────────────────────────────
-export type ChartView = "line" | "ring";
+export type ChartView = "line" | "ring" | "finance";
 
 export interface ChartDataPoint {
   date: string;
