@@ -41,7 +41,7 @@ export default function AccountsSection() {
   };
 
   return (
-    <GlassCard padding="md" className="flex flex-col gap-4">
+    <GlassCard padding="md" className="h-full flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Wallet size={16} style={{ color: "var(--primary)" }} />
