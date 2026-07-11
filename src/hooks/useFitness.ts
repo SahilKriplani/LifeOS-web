@@ -23,15 +23,20 @@ const fetchLogs = async (from?: string, to?: string): Promise<FitnessLog[]> => {
   }));
 };
 
+// Backend serializes Decimal as a string, so coerce numerics defensively.
+const num = (v: unknown): number | null =>
+  v === null || v === undefined ? null : Number(v);
+
 const fetchStats = async (): Promise<FitnessStats> => {
   const res = await api.get("/fitness/stats");
   const raw = res.data.data;
   return {
-    currentWeight: raw.current_weight,
-    targetWeight: 85,
-    weightLost: raw.weight_lost,
-    averageCalories: raw.average_calories,
-    averageSteps: raw.average_steps,
+    currentWeight: num(raw.current_weight) ?? 0,
+    startWeight: num(raw.start_weight),
+    targetWeight: num(raw.target_weight),
+    weightLost: num(raw.weight_lost) ?? 0,
+    averageCalories: num(raw.average_calories) ?? 0,
+    averageSteps: num(raw.average_steps) ?? 0,
   };
 };
 

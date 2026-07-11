@@ -5,6 +5,7 @@ import StatsRow from "@/components/dashboard/StatsRow";
 import ChartsSection from "@/components/dashboard/ChartsSection";
 import PlannerWidget from "@/components/dashboard/PlannerWidget";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
+import FinanceQuickAdd from "@/components/dashboard/FinanceQuickAdd";
 import { useDSAStats } from "@/hooks/useDSA";
 import { useFitnessStats } from "@/hooks/useFitness";
 
@@ -47,11 +48,15 @@ export default function DashboardPage() {
         dsaSolved={dsaStats?.total ?? 0}
         currentStreak={streak?.currentStreak ?? 0}
         currentWeight={Number(fitnessStats?.currentWeight ?? 0)}
+        targetWeight={fitnessStats?.targetWeight ?? null}
         dailyCompletion={dailyCompletion}
       />
 
-      {/* Charts */}
+      {/* Charts — full width, now with a Finance view in the toggle */}
       <ChartsSection />
+
+      {/* Quick add today's expense / income */}
+      <FinanceQuickAdd />
 
       {/* Bottom section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
@@ -59,6 +64,7 @@ export default function DashboardPage() {
         <StreakCalendar
           currentStreak={streak?.currentStreak ?? 0}
           bestStreak={streak?.bestStreak ?? 0}
+          activeDates={streak?.activeDates ?? []}
         />
       </div>
     </div>

@@ -186,11 +186,7 @@ export default function DSALogModal({
                 {...register("problemName")}
                 placeholder="e.g. Two Sum"
                 autoFocus
-                style={{
-                  background: "var(--muted)",
-                  border: `1px solid ${errors.problemName ? "#f43f5e" : "var(--glass-border)"}`,
-                  color: "var(--foreground)",
-                }}
+                aria-invalid={!!errors.problemName}
               />
               {errors.problemName && (
                 <span className="text-xs text-rose-400">

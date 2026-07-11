@@ -8,11 +8,11 @@ import * as yup from "yup";
 import {
   Settings,
   User,
-  Lock,
   Loader2,
   Moon,
   Sun,
   CheckCircle2,
+  Target,
 } from "lucide-react";
 import GlassCard from "@/components/shared/GlassCard";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useTheme } from "next-themes";
+import { useQueryClient } from "@tanstack/react-query";
 import useUserStore from "@/store/useUserStore";
+import { useFitnessStats } from "@/hooks/useFitness";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 
@@ -32,20 +34,17 @@ const profileSchema = yup.object({
     .required("Name is required"),
 });
 
-const passwordSchema = yup.object({
-  currentPassword: yup.string().required("Current password is required"),
-  newPassword: yup
-    .string()
-    .min(6, "Minimum 6 characters")
-    .required("New password is required"),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("newPassword")], "Passwords do not match")
-    .required("Please confirm your password"),
+const goalSchema = yup.object({
+  targetWeight: yup
+    .number()
+    .typeError("Enter a number")
+    .min(20, "Must be at least 20 kg")
+    .max(400, "Must be 400 kg or less")
+    .required("Target weight is required"),
 });
 
 type ProfileForm = yup.InferType<typeof profileSchema>;
-type PasswordForm = yup.InferType<typeof passwordSchema>;
+type GoalForm = yup.InferType<typeof goalSchema>;
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 function Section({
@@ -105,8 +104,10 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
+  const queryClient = useQueryClient();
+  const { data: fitnessStats } = useFitnessStats();
   const [profileSuccess, setProfileSuccess] = useState(false);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [goalSuccess, setGoalSuccess] = useState(false);
 
   const {
     register: registerProfile,
@@ -118,11 +119,16 @@ export default function SettingsPage() {
   });
 
   const {
-    register: registerPassword,
-    handleSubmit: handlePasswordSubmit,
-    reset: resetPassword,
-    formState: { errors: passwordErrors, isSubmitting: passwordSubmitting },
-  } = useForm<PasswordForm>({ resolver: yupResolver(passwordSchema) });
+    register: registerGoal,
+    handleSubmit: handleGoalSubmit,
+    formState: { errors: goalErrors, isSubmitting: goalSubmitting },
+  } = useForm<GoalForm>({
+    resolver: yupResolver(goalSchema),
+    // `values` keeps the field in sync once stats finish loading.
+    values: fitnessStats?.targetWeight
+      ? { targetWeight: fitnessStats.targetWeight }
+      : undefined,
+  });
 
   const onProfileSubmit = async (data: ProfileForm) => {
     try {
@@ -136,19 +142,18 @@ export default function SettingsPage() {
     }
   };
 
-  const onPasswordSubmit = async (data: PasswordForm) => {
+  const onGoalSubmit = async (data: GoalForm) => {
     try {
-      await api.patch("/auth/change-password", {
-        current_password: data.currentPassword,
-        new_password: data.newPassword,
+      await api.patch("/auth/update-profile", {
+        target_weight_kg: data.targetWeight,
       });
-      toast.success("Password changed successfully");
-      setPasswordSuccess(true);
-      resetPassword();
-      setTimeout(() => setPasswordSuccess(false), 3000);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } };
-      toast.error(error.response?.data?.detail || "Failed to change password");
+      // Stats endpoint derives the fitness ring from this goal, so refresh it.
+      queryClient.invalidateQueries({ queryKey: ["fitness-stats"] });
+      setGoalSuccess(true);
+      toast.success("Goal weight updated");
+      setTimeout(() => setGoalSuccess(false), 3000);
+    } catch {
+      toast.error("Failed to update goal weight");
     }
   };
 
@@ -199,11 +204,7 @@ export default function SettingsPage() {
             <Input
               {...registerProfile("name")}
               placeholder="Your name"
-              style={{
-                background: "var(--muted)",
-                border: `1px solid ${profileErrors.name ? "#f43f5e" : "var(--glass-border)"}`,
-                color: "var(--foreground)",
-              }}
+              aria-invalid={!!profileErrors.name}
             />
             {profileErrors.name && (
               <span className="text-xs text-rose-400">
@@ -219,16 +220,7 @@ export default function SettingsPage() {
             >
               Email
             </Label>
-            <Input
-              value={user?.email ?? ""}
-              disabled
-              style={{
-                background: "var(--muted)",
-                border: "1px solid var(--glass-border)",
-                color: "var(--muted-foreground)",
-                opacity: 0.6,
-              }}
-            />
+            <Input value={user?.email ?? ""} disabled />
             <span
               className="text-xs"
               style={{ color: "var(--muted-foreground)" }}
@@ -260,78 +252,64 @@ export default function SettingsPage() {
         </form>
       </Section>
 
-      {/* Password */}
+      {/* Fitness Goal */}
       <Section
-        title="Change Password"
-        description="Update your account password"
-        icon={Lock}
-        delay={0.2}
+        title="Fitness Goal"
+        description="Set your target weight — powers the dashboard progress ring"
+        icon={Target}
+        delay={0.15}
       >
         <form
-          onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+          onSubmit={handleGoalSubmit(onGoalSubmit)}
           className="flex flex-col gap-4"
         >
-          {[
-            {
-              id: "currentPassword" as const,
-              label: "Current Password",
-              error: passwordErrors.currentPassword,
-            },
-            {
-              id: "newPassword" as const,
-              label: "New Password",
-              error: passwordErrors.newPassword,
-            },
-            {
-              id: "confirmPassword" as const,
-              label: "Confirm New Password",
-              error: passwordErrors.confirmPassword,
-            },
-          ].map((field) => (
-            <div key={field.id} className="flex flex-col gap-1.5">
-              <Label
-                className="text-xs font-semibold uppercase tracking-widest"
+          <div className="flex flex-col gap-1.5">
+            <Label
+              className="text-xs font-semibold uppercase tracking-widest"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              Target Weight (kg)
+            </Label>
+            <Input
+              {...registerGoal("targetWeight")}
+              type="text"
+              inputMode="decimal"
+              placeholder="e.g. 86"
+              aria-invalid={!!goalErrors.targetWeight}
+            />
+            {goalErrors.targetWeight ? (
+              <span className="text-xs text-rose-400">
+                {goalErrors.targetWeight.message}
+              </span>
+            ) : (
+              <span
+                className="text-xs"
                 style={{ color: "var(--muted-foreground)" }}
               >
-                {field.label}
-              </Label>
-              <Input
-                {...registerPassword(field.id)}
-                type="password"
-                placeholder="••••••••"
-                style={{
-                  background: "var(--muted)",
-                  border: `1px solid ${field.error ? "#f43f5e" : "var(--glass-border)"}`,
-                  color: "var(--foreground)",
-                }}
-              />
-              {field.error && (
-                <span className="text-xs text-rose-400">
-                  {field.error.message}
-                </span>
-              )}
-            </div>
-          ))}
+                Progress is measured from your first logged weight to this goal
+              </span>
+            )}
+          </div>
 
           <Button
             type="submit"
-            disabled={passwordSubmitting}
+            disabled={goalSubmitting}
             className="w-full sm:w-fit font-semibold flex items-center justify-center gap-2"
             style={{
               background: "var(--primary)",
               color: "var(--primary-foreground)",
             }}
           >
-            {passwordSubmitting ? (
+            {goalSubmitting ? (
               <Loader2 size={14} className="animate-spin" />
-            ) : passwordSuccess ? (
+            ) : goalSuccess ? (
               <CheckCircle2 size={14} />
             ) : null}
-            {passwordSubmitting
-              ? "Changing..."
-              : passwordSuccess
-                ? "Changed!"
-                : "Change Password"}
+            {goalSubmitting
+              ? "Saving..."
+              : goalSuccess
+                ? "Saved!"
+                : "Save Goal"}
           </Button>
         </form>
       </Section>

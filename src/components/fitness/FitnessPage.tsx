@@ -14,17 +14,16 @@ import {
   Bar,
 } from "recharts";
 import FitnessStatsRow from "@/components/fitness/FitnessStatsRow";
-import FitnessLogModal from "@/components/fitness/FitnessLogModal";
+import LogModal from "@/components/fitness/LogModal";
+import WorkoutSection from "@/components/fitness/WorkoutSection";
 import GlassCard from "@/components/shared/GlassCard";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Dumbbell, Scale, Flame, Footprints, Trash2 } from "lucide-react";
 import {
   useFitnessLogs,
   useFitnessStats,
-  useCreateFitnessLog,
   useDeleteFitnessLog,
 } from "@/hooks/useFitness";
-import type { CreateFitnessLogPayload } from "@/types";
 import toast from "react-hot-toast";
 
 // ─── Chart tab type ───────────────────────────────────────────────────────────
@@ -47,12 +46,11 @@ function Skeleton({ rows = 4 }: { rows?: number }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function FitnessPage() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   const [chartTab, setChartTab] = useState<ChartTab>("weight");
 
   const { data: logs = [], isLoading: logsLoading } = useFitnessLogs();
   const { data: stats, isLoading: statsLoading } = useFitnessStats();
-  const createLog = useCreateFitnessLog();
   const deleteLog = useDeleteFitnessLog();
 
   const chartData = [...logs]
@@ -63,13 +61,6 @@ export default function FitnessPage() {
       calories: l.calories,
       steps: l.steps,
     }));
-
-  const handleLog = (payload: CreateFitnessLogPayload) => {
-    createLog.mutate(payload, {
-      onSuccess: () => toast.success("Fitness log saved! 💪"),
-      onError: () => toast.error("Failed to save log"),
-    });
-  };
 
   const handleDelete = (id: number) => {
     deleteLog.mutate(id, {
@@ -109,11 +100,14 @@ export default function FitnessPage() {
             className="text-xs md:text-sm"
             style={{ color: "var(--muted-foreground)" }}
           >
-            {logs.length} days logged — 139kg → 85kg journey
+            {logs.length} days logged
+            {stats?.startWeight != null && stats?.targetWeight != null
+              ? ` — ${stats.startWeight}kg → ${stats.targetWeight}kg journey`
+              : ""}
           </p>
         </div>
         <ShimmerButton
-          onClick={() => setModalOpen(true)}
+          onClick={() => setLogOpen(true)}
           shimmerColor="var(--accent)"
           background="var(--primary)"
           className="h-9 md:h-10 px-4 md:px-5 text-xs md:text-sm font-semibold rounded-xl"
@@ -136,7 +130,7 @@ export default function FitnessPage() {
       ) : (
         <FitnessStatsRow
           currentWeight={Number(stats?.currentWeight ?? 0)}
-          targetWeight={85}
+          targetWeight={stats?.targetWeight ?? null}
           calories={Math.round(stats?.averageCalories ?? 0)}
           steps={Math.round(stats?.averageSteps ?? 0)}
         />
@@ -277,6 +271,9 @@ export default function FitnessPage() {
         </motion.div>
       </GlassCard>
 
+      {/* Workout logging (Liftoff-style) */}
+      <WorkoutSection />
+
       {/* Log table */}
       <GlassCard padding="md" className="flex flex-col gap-4">
         <h3
@@ -377,12 +374,8 @@ export default function FitnessPage() {
         )}
       </GlassCard>
 
-      {/* Modal */}
-      <FitnessLogModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleLog}
-      />
+      {/* Unified log modal (Body + Workout) */}
+      <LogModal open={logOpen} onClose={() => setLogOpen(false)} />
     </div>
   );
 }

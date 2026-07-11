@@ -5,64 +5,61 @@ import GlassCard from "@/components/shared/GlassCard";
 import { Flame, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockWeekData = [
-  { date: "Mon", active: true },
-  { date: "Tue", active: true },
-  { date: "Wed", active: true },
-  { date: "Thu", active: true },
-  { date: "Fri", active: true },
-  { date: "Sat", active: false },
-  { date: "Sun", active: false },
-];
-
-const mockMonthData: boolean[] = [
-  true,
-  true,
-  true,
-  false,
-  true,
-  true,
-  true,
-  false,
-  false,
-  true,
-  true,
-  true,
-  true,
-  true,
-  false,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  false,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  false,
-  false,
-];
-
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface StreakCalendarProps {
   currentStreak: number;
   bestStreak: number;
+  activeDates: string[]; // recent active days from the API, "YYYY-MM-DD"
 }
+
+// Local-time "YYYY-MM-DD" so generated day cells line up with the user's "today"
+// (toISOString would shift to UTC and can land on the wrong calendar day).
+function toLocalISO(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MONTH_SPAN = 30; // trailing days shown in the heatmap
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function StreakCalendar({
   currentStreak,
   bestStreak,
+  activeDates,
 }: StreakCalendarProps) {
-  const today = new Date().getDay();
-  // Convert Sunday=0 to Monday=0 based index
-  const todayIndex = today === 0 ? 6 : today - 1;
+  const activeSet = new Set(activeDates);
+  const today = new Date();
+  const todayISO = toLocalISO(today);
+
+  // ─── This week (Monday-start, containing today) ──────────────────────────
+  const jsDay = today.getDay(); // 0=Sun … 6=Sat
+  const mondayOffset = jsDay === 0 ? 6 : jsDay - 1; // days back to Monday
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - mondayOffset);
+
+  const weekDays = WEEKDAY_LABELS.map((label, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const iso = toLocalISO(d);
+    return {
+      label,
+      iso,
+      active: activeSet.has(iso),
+      isToday: iso === todayISO,
+      isFuture: iso > todayISO, // ISO date strings sort chronologically
+    };
+  });
+
+  // ─── This month (trailing 30 days, oldest → today) ───────────────────────
+  const monthDays = Array.from({ length: MONTH_SPAN }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (MONTH_SPAN - 1 - i));
+    const iso = toLocalISO(d);
+    return { iso, active: activeSet.has(iso), isToday: iso === todayISO };
+  });
 
   return (
     <GlassCard padding="md" className="flex flex-col gap-5 h-full">
@@ -157,19 +154,19 @@ export default function StreakCalendar({
           This Week
         </span>
         <div className="flex items-center justify-between">
-          {mockWeekData.map((day, i) => (
-            <div key={day.date} className="flex flex-col items-center gap-1.5">
+          {weekDays.map((day, i) => (
+            <div key={day.iso} className="flex flex-col items-center gap-1.5">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center",
-                  i === todayIndex && "ring-2",
+                  day.isToday && "ring-2",
                 )}
                 style={{
                   background: day.active ? "var(--primary)" : "var(--muted)",
-                  opacity: i > todayIndex ? 0.4 : 1,
+                  opacity: day.isFuture ? 0.4 : 1,
                 }}
               >
                 {day.active && (
@@ -188,13 +185,12 @@ export default function StreakCalendar({
               <span
                 className="text-xs font-medium"
                 style={{
-                  color:
-                    i === todayIndex
-                      ? "var(--primary)"
-                      : "var(--muted-foreground)",
+                  color: day.isToday
+                    ? "var(--primary)"
+                    : "var(--muted-foreground)",
                 }}
               >
-                {day.date}
+                {day.label}
               </span>
             </div>
           ))}
@@ -207,19 +203,23 @@ export default function StreakCalendar({
           className="text-xs font-medium uppercase tracking-widest"
           style={{ color: "var(--muted-foreground)" }}
         >
-          This Month
+          Last 30 Days
         </span>
         <div className="grid grid-cols-10 gap-1">
-          {mockMonthData.map((active, i) => (
+          {monthDays.map((day, i) => (
             <motion.div
-              key={i}
+              key={day.iso}
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2, delay: i * 0.02 }}
-              className="w-full aspect-square rounded-sm"
+              title={day.iso}
+              className={cn(
+                "w-full aspect-square rounded-sm",
+                day.isToday && "ring-2",
+              )}
               style={{
-                background: active ? "var(--primary)" : "var(--muted)",
-                opacity: active ? 0.85 : 0.3,
+                background: day.active ? "var(--primary)" : "var(--muted)",
+                opacity: day.active ? 0.85 : 0.3,
               }}
             />
           ))}
