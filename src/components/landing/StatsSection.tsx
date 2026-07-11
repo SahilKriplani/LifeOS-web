@@ -3,36 +3,36 @@
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import { useInView } from "framer-motion";
-import { Code2, Dumbbell, Flame, Target } from "lucide-react";
+import { Layers, IndianRupee, LayoutDashboard, Download } from "lucide-react";
 
 // ─── Stats data ───────────────────────────────────────────────────────────────
 const stats = [
   {
-    icon: Code2,
-    value: "300+",
-    label: "DSA Problems",
-    sub: "Target over 12 months",
+    icon: Layers,
+    value: "10+",
+    label: "Life modules",
+    sub: "Planner, goals, fitness, finance & more",
     color: "#14B8A6",
   },
   {
-    icon: Dumbbell,
-    value: "54kg",
-    label: "To Lose",
-    sub: "139kg → 85kg journey",
+    icon: IndianRupee,
+    value: "₹0",
+    label: "To get started",
+    sub: "Free-forever core — no card needed",
     color: "#8b5cf6",
   },
   {
-    icon: Flame,
-    value: "365",
-    label: "Day Goal",
-    sub: "Streak target this year",
-    color: "#f97316",
+    icon: LayoutDashboard,
+    value: "1",
+    label: "Unified dashboard",
+    sub: "Replaces six scattered apps",
+    color: "#06b6d4",
   },
   {
-    icon: Target,
-    value: "4",
-    label: "Core Projects",
-    sub: "Built for top companies",
+    icon: Download,
+    value: "100%",
+    label: "Your data",
+    sub: "Export to CSV / JSON anytime",
     color: "#ec4899",
   },
 ];
@@ -141,17 +141,17 @@ export default function StatsSection() {
               color: "var(--primary)",
             }}
           >
-            THE JOURNEY
+            WHY LIFEOS
           </span>
 
           <h2
             className="text-4xl lg:text-5xl font-bold tracking-tight"
             style={{ color: "var(--foreground)" }}
           >
-            Big goals.
+            Everything you were juggling,
             <br />
             <span style={{ color: "var(--primary)" }}>
-              Tracked every single day.
+              now in one place.
             </span>
           </h2>
 
@@ -159,9 +159,9 @@ export default function StatsSection() {
             className="text-base max-w-lg leading-relaxed"
             style={{ color: "var(--muted-foreground)" }}
           >
-            LifeOS was built to track a real journey — cracking top product
-            companies and transforming physically. These are the numbers that
-            matter.
+            Stop scattering your life across six apps and a graveyard of Notion
+            templates. LifeOS brings every part of it into one calm, fast
+            dashboard — and your data stays yours.
           </p>
         </motion.div>
 
@@ -188,8 +188,8 @@ export default function StatsSection() {
             className="text-sm italic max-w-md"
             style={{ color: "var(--muted-foreground)" }}
           >
-            Built by Sahil Kriplani — 22, full-stack developer, targeting top
-            product companies by March 2027.
+            One operating system for your tasks, habits, fitness, finances and
+            goals — built to keep up with you, not the other way around.
           </p>
         </motion.div>
       </div>

@@ -1,197 +1,280 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import {
+  CalendarDays,
   Code2,
   Dumbbell,
-  CalendarDays,
+  Wallet,
   Flame,
   Target,
+  Sparkles,
   BarChart3,
+  Bell,
+  NotebookPen,
+  CheckCircle2,
+  ArrowUpRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// ─── Features data ────────────────────────────────────────────────────────────
-const features = [
-  {
-    icon: Code2,
-    title: "DSA Tracker",
-    description:
-      "Log every problem you solve. Track by topic, difficulty, and platform. Watch your 300+ problem journey unfold with beautiful charts.",
-    color: "#14B8A6",
-    tag: "For engineers",
-  },
-  {
-    icon: Dumbbell,
-    title: "Fitness Logger",
-    description:
-      "Daily weight, calories, and steps. Visualize your transformation from 139kg to 85kg with trend lines and milestone badges.",
-    color: "#8b5cf6",
-    tag: "For the body",
-  },
-  {
-    icon: CalendarDays,
-    title: "Daily Planner",
-    description:
-      "Dynamic task management with priority levels. Animated checkboxes, progress bars, and a clean daily view that keeps you focused.",
-    color: "#06b6d4",
-    tag: "For focus",
-  },
-  {
-    icon: Flame,
-    title: "Streak System",
-    description:
-      "Never break the chain. Visual streak calendar, current and best streak tracking, and daily check-ins to build unstoppable habits.",
-    color: "#f97316",
-    tag: "For discipline",
-  },
-  {
-    icon: Target,
-    title: "Goals Tracker",
-    description:
-      "Set long-term goals and track them with animated progress rings. Break big goals into milestones and celebrate every win.",
-    color: "#ec4899",
-    tag: "For ambition",
-  },
-  {
-    icon: BarChart3,
-    title: "Analytics",
-    description:
-      "Line charts, ring charts, and weekly breakdowns across every module. See your life improving — week over week, month over month.",
-    color: "#f59e0b",
-    tag: "For insight",
-  },
-];
+const ease = [0.16, 1, 0.3, 1] as const;
 
-// ─── Animation variants ───────────────────────────────────────────────────────
-const containerVariants: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+function BentoCard({
+  className,
+  color,
+  icon: Icon,
+  title,
+  desc,
+  soon,
+  children,
+}: {
+  className?: string;
+  color: string;
+  icon: React.ElementType;
+  title: string;
+  desc: string;
+  soon?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease }}
+      whileHover={{ y: -4 }}
+      className={cn(
+        "group glass rounded-2xl p-6 flex flex-col gap-3 overflow-hidden relative cursor-default",
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: `${color}1f` }}
+        >
+          <Icon size={20} style={{ color }} />
+        </div>
+        {soon && (
+          <span
+            className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+            style={{ background: `${color}1f`, color }}
+          >
+            Soon
+          </span>
+        )}
+      </div>
 
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" as const },
-  },
-};
+      <div className="flex flex-col gap-1.5">
+        <h3 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
+          {title}
+        </h3>
+        <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+          {desc}
+        </p>
+      </div>
 
-// ─── Component ────────────────────────────────────────────────────────────────
+      {children}
+
+      <ArrowUpRight
+        size={18}
+        className="absolute top-5 right-5 opacity-0 -translate-y-1 transition-all duration-300 group-hover:opacity-40 group-hover:translate-y-0"
+        style={{ color: "var(--foreground)" }}
+      />
+    </motion.div>
+  );
+}
+
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-32 relative">
-      {/* Background blob */}
+    <section id="features" className="py-28 relative">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full opacity-5 blur-3xl"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full opacity-[0.06] blur-3xl"
           style={{ background: "var(--primary)" }}
         />
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
-        {/* Section header */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center text-center gap-4 mb-16"
+          transition={{ duration: 0.6, ease }}
+          className="flex flex-col items-center text-center gap-4 mb-14"
         >
           <span
-            className="px-3 py-1 rounded-full text-xs font-semibold tracking-wide"
-            style={{
-              background: "var(--muted)",
-              border: "1px solid var(--glass-border)",
-              color: "var(--primary)",
-            }}
+            className="px-3 py-1 rounded-full text-xs font-semibold tracking-wide glass"
+            style={{ color: "var(--primary)" }}
           >
-            EVERYTHING YOU NEED
+            EVERYTHING, IN ONE PLACE
           </span>
-
           <h2
-            className="text-4xl lg:text-5xl font-bold tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
             style={{ color: "var(--foreground)" }}
           >
-            Built for people who
+            Ten apps&apos; worth of life admin,
             <br />
-            <span style={{ color: "var(--primary)" }}>
-              take their goals seriously.
-            </span>
+            <span style={{ color: "var(--primary)" }}>finally under one roof.</span>
           </h2>
-
-          <p
-            className="text-base max-w-xl leading-relaxed"
-            style={{ color: "var(--muted-foreground)" }}
-          >
-            Every module is designed to work together — your DSA grind, your
-            fitness journey, and your daily focus, all in one place.
+          <p className="text-base max-w-xl leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+            Stop stitching together Notion templates, spreadsheets, and habit
+            apps. Every module shares the same data, so your whole life rolls up
+            into one honest picture.
           </p>
         </motion.div>
 
-        {/* Features grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {features.map((feature) => (
-            <motion.div
-              key={feature.title}
-              variants={cardVariants}
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ duration: 0.2 }}
-              className="glass rounded-2xl p-6 flex flex-col gap-4 cursor-default"
-            >
-              {/* Icon + tag row */}
-              <div className="flex items-center justify-between">
+        {/* Bento grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-[minmax(200px,auto)]">
+          {/* Planner — wide */}
+          <BentoCard
+            className="md:col-span-2"
+            color="#0ea5e9"
+            icon={CalendarDays}
+            title="Daily Planner"
+            desc="Priority-aware tasks with a clean daily view. Plan tonight, execute tomorrow."
+          >
+            <div className="mt-auto flex flex-col gap-2">
+              {[
+                { t: "Solve 2 DSA problems", done: true },
+                { t: "Leg day — 45 min", done: true },
+                { t: "Review monthly budget", done: false },
+              ].map((row) => (
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: `${feature.color}18` }}
+                  key={row.t}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm"
+                  style={{ background: "var(--muted)", color: "var(--foreground)" }}
                 >
-                  <feature.icon size={20} style={{ color: feature.color }} />
+                  <CheckCircle2
+                    size={15}
+                    style={{ color: row.done ? "#14B8A6" : "var(--muted-foreground)" }}
+                  />
+                  <span className={row.done ? "line-through opacity-60" : ""}>{row.t}</span>
                 </div>
-                <span
-                  className="text-xs font-medium px-2.5 py-1 rounded-full"
-                  style={{
-                    background: "var(--muted)",
-                    color: "var(--muted-foreground)",
-                  }}
-                >
-                  {feature.tag}
-                </span>
-              </div>
+              ))}
+            </div>
+          </BentoCard>
 
-              {/* Text */}
-              <div className="flex flex-col gap-2">
-                <h3
-                  className="text-base font-semibold"
-                  style={{ color: "var(--foreground)" }}
-                >
-                  {feature.title}
-                </h3>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {feature.description}
-                </p>
+          {/* AI Weekly Review — big */}
+          <BentoCard
+            className="md:col-span-2 lg:row-span-2"
+            color="#14B8A6"
+            icon={Sparkles}
+            title="AI Weekly Review"
+            desc="Every Sunday, LifeOS reads your real data and writes back what worked, what slipped, and the one thing to fix next week."
+            soon
+          >
+            <div
+              className="mt-auto rounded-xl p-4 flex flex-col gap-2.5 text-sm"
+              style={{ background: "var(--muted)" }}
+            >
+              <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: "var(--primary)" }}>
+                <Sparkles size={13} /> Your week, summarized
               </div>
+              <p style={{ color: "var(--foreground)" }}>
+                You shipped <b>38 of 45</b> tasks and solved <b>9</b> DSA problems —
+                consistency was your edge.
+              </p>
+              <p style={{ color: "var(--muted-foreground)" }}>
+                Weakest area: workouts dropped to 2 days. Next week, aim for 4 and
+                protect your morning block.
+              </p>
+              <span className="text-[10px] mt-1" style={{ color: "var(--muted-foreground)" }}>
+                based on 6 logged days · grounded in your data, never invented
+              </span>
+            </div>
+          </BentoCard>
 
-              {/* Bottom accent line */}
-              <div
-                className="h-0.5 w-12 rounded-full mt-auto"
-                style={{ background: feature.color }}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+          {/* DSA */}
+          <BentoCard
+            color="#14B8A6"
+            icon={Code2}
+            title="DSA Tracker"
+            desc="Log every problem by topic, difficulty, and platform. Watch the curve climb."
+          />
+
+          {/* Fitness */}
+          <BentoCard
+            color="#8b5cf6"
+            icon={Dumbbell}
+            title="Fitness & Workouts"
+            desc="Weight, calories, and a full workout logger with sets, reps, and a custom exercise library."
+          />
+
+          {/* Finance — wide */}
+          <BentoCard
+            className="md:col-span-2"
+            color="#0ea5e9"
+            icon={Wallet}
+            title="Finance & Budgeting"
+            desc="Track income and spending, set category budgets, and watch where the money actually goes — manual, private, no bank linking."
+          >
+            <div className="mt-auto flex flex-col gap-2.5">
+              {[
+                { label: "Groceries", pct: 80, color: "#0ea5e9" },
+                { label: "Eating out", pct: 55, color: "#f97316" },
+                { label: "Savings", pct: 92, color: "#14B8A6" },
+              ].map((b) => (
+                <div key={b.label} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: "var(--muted-foreground)" }}>{b.label}</span>
+                    <span className="font-semibold" style={{ color: "var(--foreground)" }}>
+                      {b.pct}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full" style={{ background: "var(--muted)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${b.pct}%`, background: b.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </BentoCard>
+
+          {/* Streaks */}
+          <BentoCard
+            color="#f97316"
+            icon={Flame}
+            title="Streaks & Habits"
+            desc="Never break the chain. Daily check-ins, current and best streaks, visual calendar."
+          />
+
+          {/* Goals */}
+          <BentoCard
+            color="#ec4899"
+            icon={Target}
+            title="Goals"
+            desc="Long-term goals with progress rings and milestones — including savings targets."
+          />
+
+          {/* Analytics — wide */}
+          <BentoCard
+            className="md:col-span-2"
+            color="#f59e0b"
+            icon={BarChart3}
+            title="Analytics & Productivity Score"
+            desc="One explainable 0–100 score across every module, with trends you can actually act on — not vanity charts."
+            soon
+          />
+
+          {/* Reminders */}
+          <BentoCard
+            color="#eab308"
+            icon={Bell}
+            title="Smart Reminders"
+            desc="Nudges for streaks at risk, recurring bills, and goals falling behind."
+            soon
+          />
+
+          {/* Notes */}
+          <BentoCard
+            color="#a855f7"
+            icon={NotebookPen}
+            title="Notes & Journal"
+            desc="Quick markdown notes that feed your AI weekly insights. No bloated block editor."
+            soon
+          />
+        </div>
       </div>
     </section>
   );

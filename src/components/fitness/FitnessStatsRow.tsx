@@ -5,7 +5,7 @@ import { Scale, Flame, Footprints, TrendingDown } from "lucide-react";
 
 interface FitnessStatsRowProps {
   currentWeight: number;
-  targetWeight: number;
+  targetWeight: number | null;
   calories: number;
   steps: number;
 }
@@ -72,22 +72,23 @@ export default function FitnessStatsRow({
   calories,
   steps,
 }: FitnessStatsRowProps) {
-  const tolose = (currentWeight - targetWeight).toFixed(1);
+  const hasTarget = targetWeight != null;
+  const tolose = hasTarget ? (currentWeight - targetWeight).toFixed(1) : null;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         label="Current Weight"
         value={`${currentWeight} kg`}
-        sub={`Target: ${targetWeight} kg`}
+        sub={hasTarget ? `Target: ${targetWeight} kg` : "Set a goal in Settings"}
         color="#14B8A6"
         icon={Scale}
         delay={0}
       />
       <StatCard
         label="To Lose"
-        value={`${tolose} kg`}
-        sub="remaining to target"
+        value={tolose != null ? `${tolose} kg` : "—"}
+        sub={hasTarget ? "remaining to target" : "set a target weight"}
         color="#8b5cf6"
         icon={TrendingDown}
         delay={0.1}

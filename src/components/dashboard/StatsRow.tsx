@@ -7,6 +7,7 @@ interface StatsRowProps {
   dsaSolved: number;
   currentStreak: number;
   currentWeight: number;
+  targetWeight: number | null;
   dailyCompletion: number;
 }
 
@@ -14,6 +15,7 @@ export default function StatsRow({
   dsaSolved,
   currentStreak,
   currentWeight,
+  targetWeight,
   dailyCompletion,
 }: StatsRowProps) {
   return (
@@ -37,7 +39,7 @@ export default function StatsRow({
         value={currentWeight > 0 ? `${currentWeight}kg` : "—"}
         icon={Scale}
         trend="down"
-        trendValue="→ 85kg"
+        trendValue={targetWeight ? `→ ${targetWeight}kg` : "set a goal"}
       />
       <StatBadge
         label="Daily Tasks"

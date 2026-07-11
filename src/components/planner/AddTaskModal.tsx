@@ -149,11 +149,7 @@ export default function AddTaskModal({
                 {...register("title")}
                 placeholder="e.g. Solve 3 LeetCode problems"
                 autoFocus
-                style={{
-                  background: "var(--muted)",
-                  border: `1px solid ${errors.title ? "#f43f5e" : "var(--glass-border)"}`,
-                  color: "var(--foreground)",
-                }}
+                aria-invalid={!!errors.title}
               />
               {errors.title && (
                 <span className="text-xs text-rose-400">
